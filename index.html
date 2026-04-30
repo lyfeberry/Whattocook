@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#03060f">
+<title>WTC — Meal Planner</title>
+<meta name="description" content="Plan meals, build shopping lists, and track your recipe collection.">
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+
+<!-- Apple PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WTC">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Apple splash screens -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-iphone14.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-iphone14pro.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-iphone11.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-iphonex.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-iphone8.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-ipadmini.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-ipadpro12.png">
+
+<!-- Open Graph (looks good when shared) -->
+<meta property="og:title" content="WTC — Meal Planner">
+<meta property="og:description" content="Plan meals, build shopping lists, and track your recipe collection.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="icon-512-any.png">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+input,textarea { user-select:text; -webkit-user-select:text; }
+
+:root {
+  --orb1:rgba(0,229,255,0.59); --orb1b:rgba(0,160,240,0.23);
+  --orb2:rgba(0,70,220,0.52);  --orb2b:rgba(0,40,160,0.22);
+  --orb3:rgba(0,229,255,0.22); --orb4:rgba(0,210,255,0.23);
+  --sheet-bg:rgba(12,18,32,0.96); --bg:#03060f;
+}
+body.skin-ember  { --orb1:rgba(255,100,0,0.55);  --orb1b:rgba(200,60,0,0.22);  --orb2:rgba(180,20,20,0.5);  --orb2b:rgba(120,10,10,0.2);  --orb3:rgba(255,120,0,0.2);  --orb4:rgba(220,80,0,0.2); }
+body.skin-forest { --orb1:rgba(0,220,120,0.5);   --orb1b:rgba(0,160,80,0.2);   --orb2:rgba(0,100,60,0.5);   --orb2b:rgba(0,60,30,0.2);    --orb3:rgba(0,200,100,0.2);  --orb4:rgba(0,180,80,0.2); }
+body.skin-violet { --orb1:rgba(160,0,255,0.5);   --orb1b:rgba(100,0,200,0.2);  --orb2:rgba(80,0,180,0.5);   --orb2b:rgba(40,0,120,0.2);   --orb3:rgba(180,0,255,0.2);  --orb4:rgba(140,0,220,0.2); }
+body.skin-rose   { --orb1:rgba(255,60,120,0.5);  --orb1b:rgba(200,30,80,0.2);  --orb2:rgba(180,20,60,0.5);  --orb2b:rgba(120,10,40,0.2);  --orb3:rgba(255,80,140,0.2); --orb4:rgba(220,50,100,0.2); }
+body.skin-gold   { --orb1:rgba(255,200,0,0.55);  --orb1b:rgba(200,140,0,0.22); --orb2:rgba(180,100,0,0.5);  --orb2b:rgba(120,60,0,0.2);   --orb3:rgba(255,180,0,0.22); --orb4:rgba(220,150,0,0.2); }
+body.skin-arctic { --orb1:rgba(180,240,255,0.5); --orb1b:rgba(100,200,240,0.2);--orb2:rgba(60,140,200,0.5); --orb2b:rgba(20,80,140,0.2);   --orb3:rgba(160,230,255,0.2);--orb4:rgba(80,180,240,0.2); }
+
+body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif; transition:background 0.5s; }
+canvas { position:fixed; inset:0; z-index:1; }
+.orb { position:fixed; border-radius:50%; pointer-events:none; z-index:2; }
+.orb-1 { width:560px; height:560px; top:-200px; left:-160px; background:radial-gradient(circle at center,var(--orb1) 0%,var(--orb1b) 45%,transparent 72%); filter:blur(72px); animation:drift1 10s ease-in-out infinite; }
+.orb-2 { width:500px; height:500px; bottom:-120px; right:-130px; background:radial-gradient(circle at center,var(--orb2) 0%,var(--orb2b) 45%,transparent 70%); filter:blur(76px); animation:drift2 13s ease-in-out infinite; }
+.orb-3 { width:340px; height:340px; top:50%; left:50%; background:radial-gradient(circle at center,var(--orb3) 0%,transparent 70%); filter:blur(58px); animation:drift1o 18s ease-in-out infinite; }
+.orb-4 { width:280px; height:280px; top:38%; left:-70px; background:radial-gradient(circle at center,var(--orb4) 0%,transparent 70%); filter:blur(54px); animation:drift2 15s ease-in-out infinite 3s; }
+@keyframes drift1  { 0%,100%{transform:translate(0,0)} 33%{transform:translate(24px,36px)} 66%{transform:translate(-16px,20px)} }
+@keyframes drift2  { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-28px,-22px)} 66%{transform:translate(18px,-36px)} }
+@keyframes drift1o { 0%,100%{transform:translate(-50%,-50%)} 33%{transform:translate(calc(-50% + 24px),calc(-50% + 36px))} 66%{transform:translate(calc(-50% - 16px),calc(-50% + 20px))} }
+.vignette { position:fixed; inset:0; background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,0.65) 100%); pointer-events:none; z-index:3; }
+.noise { position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); opacity:0.45; pointer-events:none; z-index:4; }
+
+/* TOP BAR */
+.top-bar { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px; pointer-events:none; }
+.top-bar-left { pointer-events:all; }
+.view-label { font-size:15px; font-weight:600; color:rgba(255,255,255,0.5); }
+.top-bar-right { display:flex; align-items:center; gap:8px; pointer-events:all; }
+.icon-btn { width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.13); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-shadow:0 0 0 0.5px rgba(255,255,255,0.22) inset,0 2px 10px rgba(0,0,0,0.3); transition:background 0.2s,transform 0.2s; }
+.icon-btn:active { transform:scale(0.90); background:rgba(255,255,255,0.22); }
+.icon-btn svg { width:16px; height:16px; stroke:rgba(255,255,255,0.72); stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+
+/* SEARCH */
+.search-bar { position:fixed; top:0; left:0; right:0; z-index:11; padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px; background:var(--sheet-bg); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); box-shadow:0 1px 0 rgba(255,255,255,0.07); display:flex; align-items:center; gap:10px; transform:translateY(-100%); transition:transform 0.32s cubic-bezier(0.32,0.72,0,1); }
+.search-bar.open { transform:translateY(0); }
+.search-input { flex:1; background:rgba(255,255,255,0.07); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; color:rgba(255,255,255,0.9); font-size:15px; font-family:inherit; padding:10px 14px; }
+.search-input::placeholder { color:rgba(255,255,255,0.25); }
+.search-cancel { background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.5); font-size:14px; font-family:inherit; padding:4px 2px; }
+
+/* MAIN */
+.main { position:fixed; inset:0; z-index:5; overflow-y:auto; overflow-x:hidden; padding:calc(62px + env(safe-area-inset-top,0px)) 14px calc(120px + env(safe-area-inset-bottom,0px)); -webkit-overflow-scrolling:touch; }
+.main::-webkit-scrollbar { display:none; }
+
+/* EMPTY STATE */
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; gap:12px; opacity:0.35; pointer-events:none; }
+.empty-state svg { width:44px; height:44px; stroke:rgba(255,255,255,0.5); stroke-width:1.2; fill:none; }
+.empty-state p { color:rgba(255,255,255,0.6); font-size:14px; font-weight:300; text-align:center; line-height:1.7; }
+
+/* MEAL CARDS */
+.cards-grid { display:flex; flex-direction:column; gap:16px; }
+@keyframes slideInRight { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideInLeft  { from{opacity:0;transform:translateX(-60px)} to{opacity:1;transform:translateX(0)} }
+@keyframes cardIn { from{opacity:0;transform:translateY(20px) scale(0.97)} to{opacity:1;transform:none} }
+@keyframes shake  { 0%,100%{transform:rotate(0deg)} 20%{transform:rotate(-1.5deg)} 40%{transform:rotate(1.5deg)} 60%{transform:rotate(-1deg)} 80%{transform:rotate(1deg)} }
+
+.meal-card { border-radius:18px; background:rgba(255,255,255,0.13); backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%); box-shadow:0 0 0 0.5px rgba(255,255,255,0.20) inset,0 4px 24px rgba(0,0,0,0.4); overflow:hidden; position:relative; animation:cardIn 0.36s cubic-bezier(0.34,1.4,0.64,1) both; transform-origin:center; }
+.meal-card.shaking { animation:shake 0.4s ease infinite; overflow:visible; }
+.meal-card.slide-in-right { animation:slideInRight 0.35s cubic-bezier(0.34,1.2,0.64,1) both; }
+.meal-card.slide-in-left  { animation:slideInLeft  0.35s cubic-bezier(0.34,1.2,0.64,1) both; }
+.meal-card .card-photo { width:calc(100% - 20px); height:200px; object-fit:cover; display:block; margin:10px auto 0; border-radius:12px; }
+.meal-card .card-photo-placeholder { width:calc(100% - 20px); height:150px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; margin:10px auto 0; border-radius:12px; }
+.meal-card .card-photo-placeholder svg { width:28px; height:28px; stroke:rgba(255,255,255,0.16); fill:none; }
+.meal-card .card-body { padding:14px 14px 16px; }
+.meal-card .card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+.meal-card .card-name { font-size:17px; font-weight:600; color:rgba(255,255,255,0.92); letter-spacing:-0.2px; flex:1; padding-right:8px; }
+.card-pick-btn { background:transparent; border:2px solid rgba(255,255,255,0.3); cursor:pointer; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; transition:all 0.2s; }
+.card-pick-btn svg { width:14px; height:14px; stroke:rgba(255,255,255,0.3); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.card-pick-btn.planned { background:rgba(60,220,100,0.9); border-color:rgba(60,220,100,1); }
+.card-pick-btn.planned svg { stroke:#fff; }
+.meal-card .card-ingredients { font-size:13px; color:rgba(255,255,255,0.44); line-height:1.5; margin-bottom:4px; }
+.meal-card .card-notes { font-size:13px; color:rgba(255,255,255,0.5); font-style:italic; line-height:1.5; border-top:0.5px solid rgba(255,255,255,0.08); padding-top:8px; margin-top:6px; }
+
+/* CARD ACTION BAR (shake) */
+.card-action-bar { position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between; z-index:5; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.meal-card.shaking .card-action-bar { opacity:1; pointer-events:all; }
+.card-action-btn { display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:20px; border:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.card-action-btn:active { opacity:0.7; }
+.card-btn-edit   { background:rgba(0,180,255,0.25); color:rgba(0,210,255,0.95); box-shadow:0 0 0 0.5px rgba(0,200,255,0.3) inset; }
+.card-btn-delete { background:rgba(255,60,60,0.25); color:rgba(255,100,100,0.95); box-shadow:0 0 0 0.5px rgba(255,80,80,0.3) inset; }
+.card-action-btn svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* PLANNER VIEW */
+.planner-grid { display:flex; flex-direction:column; gap:14px; }
+.plan-day-card { border-radius:18px; background:rgba(255,255,255,0.08); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-shadow:0 0 0 0.5px rgba(255,255,255,0.14) inset,0 4px 20px rgba(0,0,0,0.3); overflow:hidden; animation:cardIn 0.36s cubic-bezier(0.34,1.4,0.64,1) both; }
+.plan-day-header { padding:12px 16px 10px; border-bottom:0.5px solid rgba(255,255,255,0.07); }
+.plan-day-name { font-size:16px; font-weight:700; color:rgba(255,255,255,0.9); }
+.plan-day-date { font-size:12px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.plan-slot { padding:14px 16px; display:flex; align-items:center; gap:12px; position:relative; min-height:64px; }
+.plan-slot-photo { width:46px; height:46px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+.plan-slot-photo-placeholder { width:46px; height:46px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.plan-slot-photo-placeholder svg { width:18px; height:18px; stroke:rgba(255,255,255,0.2); fill:none; }
+.plan-slot-info { flex:1; min-width:0; }
+.plan-slot-meal-name { font-size:15px; font-weight:600; color:rgba(255,255,255,0.88); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plan-slot-ingredients { font-size:12px; color:rgba(255,255,255,0.38); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plan-slot-empty-label { font-size:14px; color:rgba(255,255,255,0.25); }
+@keyframes slotShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+.plan-slot.slot-shaking { animation:slotShake 0.35s ease infinite; }
+.slot-delete-btn { position:absolute; top:50%; right:14px; width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; background:rgba(255,59,48,0.9); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transform:translateY(-50%) scale(0.7); transition:opacity 0.2s,transform 0.2s; }
+.plan-slot.slot-shaking .slot-delete-btn { opacity:1; pointer-events:all; transform:translateY(-50%) scale(1); }
+.slot-delete-btn svg { width:12px; height:12px; stroke:#fff; fill:none; stroke-width:2.5; stroke-linecap:round; }
+
+/* SHOPPING LIST */
+.shop-section-title { font-size:11px; font-weight:600; color:rgba(255,255,255,0.3); letter-spacing:0.7px; text-transform:uppercase; margin-bottom:10px; }
+.shop-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,0.07); box-shadow:0 0 0 0.5px rgba(255,255,255,0.1) inset; margin-bottom:8px; cursor:pointer; }
+.shop-check { width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; }
+.shop-item.checked .shop-check { background:rgba(60,220,100,0.2); border-color:rgba(60,220,100,0.7); }
+.shop-check svg { width:12px; height:12px; stroke:rgba(60,220,100,0.9); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; display:none; }
+.shop-item.checked .shop-check svg { display:block; }
+.shop-item-text { flex:1; font-size:15px; color:rgba(255,255,255,0.85); }
+.shop-item.checked .shop-item-text { text-decoration:line-through; color:rgba(255,255,255,0.3); }
+.shop-remove-btn { background:none; border:none; cursor:pointer; padding:4px; opacity:0.35; flex-shrink:0; display:flex; align-items:center; }
+.shop-remove-btn svg { width:16px; height:16px; stroke:rgba(255,255,255,0.7); fill:none; stroke-width:2; stroke-linecap:round; }
+.shop-action-btn { width:100%; padding:13px; border-radius:14px; border:0.5px solid rgba(255,80,80,0.25); cursor:pointer; background:rgba(255,60,60,0.08); color:rgba(255,100,100,0.8); font-size:14px; font-weight:500; font-family:inherit; margin-top:8px; }
+.shop-action-btn:active { background:rgba(255,60,60,0.18); }
+.shop-empty-msg { text-align:center; color:rgba(255,255,255,0.3); font-size:14px; line-height:1.7; padding:40px 0; }
+
+/* BOTTOM NAV */
+.bottom-nav { position:fixed; bottom:max(28px, calc(12px + env(safe-area-inset-bottom,0px))); left:50%; transform:translateX(-50%); z-index:10; display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:32px; background:rgba(255,255,255,0.14); backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%); box-shadow:0 0 0 0.5px rgba(255,255,255,0.22) inset,0 8px 32px rgba(0,0,0,0.45); }
+.nav-btn { width:50px; height:50px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; background:rgba(255,255,255,0.13); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); box-shadow:0 0 0 0.5px rgba(255,255,255,0.22) inset,0 2px 12px rgba(0,0,0,0.35); transition:background 0.18s,transform 0.15s; flex-shrink:0; }
+.nav-btn svg { width:20px; height:20px; stroke:rgba(255,255,255,0.8); stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.nav-btn.home-btn { width:66px; height:66px; background:rgba(255,255,255,0.18); box-shadow:0 0 0 0.5px rgba(255,255,255,0.32) inset,0 4px 18px rgba(0,0,0,0.4); }
+.nav-btn.home-btn svg { width:26px; height:26px; stroke:rgba(255,255,255,0.95); }
+.nav-btn:active { transform:scale(0.91); background:rgba(255,255,255,0.22); }
+.nav-btn.nav-active::after { content:''; position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.6); }
+.nav-btn.planner-active svg { stroke:rgba(60,220,100,0.95); }
+.nav-divider { width:0.5px; height:26px; background:rgba(255,255,255,0.11); border-radius:1px; flex-shrink:0; }
+
+/* SHEETS */
+.sheet-overlay { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,0); pointer-events:none; transition:background 0.3s; }
+.sheet-overlay.open { background:rgba(0,0,0,0.6); pointer-events:all; }
+.sheet { position:fixed; bottom:0; left:0; right:0; z-index:21; border-radius:26px 26px 0 0; background:var(--sheet-bg); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); box-shadow:0 -1px 0 rgba(255,255,255,0.10),0 -8px 40px rgba(0,0,0,0.5); transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.32,0.72,0,1); max-height:92dvh; display:flex; flex-direction:column; }
+.sheet.open { transform:translateY(0); }
+.sheet-handle { width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,0.18); margin:12px auto 4px; flex-shrink:0; }
+.sheet-header { display:flex; align-items:center; justify-content:space-between; padding:10px 20px 8px; flex-shrink:0; }
+.sheet-title { font-size:17px; font-weight:600; color:rgba(255,255,255,0.9); letter-spacing:-0.2px; }
+.sheet-btn { background:rgba(0,180,255,0.18); border:0.5px solid rgba(0,200,255,0.25); cursor:pointer; color:rgba(0,200,255,0.9); font-size:15px; font-weight:600; padding:7px 16px; border-radius:20px; font-family:inherit; }
+.sheet-btn:active { opacity:0.7; }
+.sheet-body { overflow-y:auto; padding:0 20px 44px; flex:1; -webkit-overflow-scrolling:touch; }
+.sheet-body::-webkit-scrollbar { display:none; }
+
+/* STEP-BY-STEP ADD */
+.step-dots { display:flex; gap:6px; margin:4px auto 20px; }
+.step-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.18); transition:background 0.3s,width 0.3s; }
+.step-dot.active { background:rgba(0,200,255,0.9); width:18px; border-radius:3px; }
+.step-wrap { display:none; flex-direction:column; align-items:center; width:100%; }
+.step-wrap.active { display:flex; animation:stepIn 0.3s cubic-bezier(0.34,1.3,0.64,1) both; }
+.step-wrap.back { animation:stepBack 0.3s cubic-bezier(0.34,1.3,0.64,1) both; }
+@keyframes stepIn   { from{opacity:0;transform:translateX(30px)}  to{opacity:1;transform:none} }
+@keyframes stepBack { from{opacity:0;transform:translateX(-30px)} to{opacity:1;transform:none} }
+.photo-picker { width:100%; height:210px; border-radius:16px; background:rgba(255,255,255,0.05); border:1.5px dashed rgba(255,255,255,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; overflow:hidden; position:relative; }
+.photo-picker:active { background:rgba(255,255,255,0.09); }
+.photo-picker img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.pick-icon { display:flex; flex-direction:column; align-items:center; gap:8px; z-index:1; }
+.pick-icon svg { width:32px; height:32px; stroke:rgba(255,255,255,0.28); fill:none; }
+.pick-icon span { font-size:14px; color:rgba(255,255,255,0.32); }
+.photo-picker.has-photo .pick-icon { display:none; }
+.remove-photo-btn { position:absolute; top:10px; right:10px; z-index:2; width:28px; height:28px; border-radius:50%; border:none; background:rgba(0,0,0,0.55); cursor:pointer; display:none; align-items:center; justify-content:center; }
+.photo-picker.has-photo .remove-photo-btn { display:flex; }
+.remove-photo-btn svg { width:12px; height:12px; stroke:rgba(255,255,255,0.8); fill:none; stroke-width:2.2; }
+.step-hint { font-size:13px; color:rgba(255,255,255,0.3); margin-top:10px; text-align:center; }
+.field { margin-bottom:18px; width:100%; }
+.field label { display:block; font-size:11px; font-weight:600; color:rgba(255,255,255,0.35); letter-spacing:0.7px; text-transform:uppercase; margin-bottom:7px; }
+.field input,.field textarea { width:100%; background:rgba(255,255,255,0.06); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; color:rgba(255,255,255,0.9); font-size:15px; font-family:inherit; padding:12px 14px; transition:border-color 0.2s,background 0.2s; }
+.field input:focus,.field textarea:focus { border-color:rgba(0,200,255,0.4); background:rgba(255,255,255,0.09); }
+.field input::placeholder,.field textarea::placeholder { color:rgba(255,255,255,0.22); }
+.field textarea { resize:none; min-height:90px; line-height:1.5; }
+.step-nav { display:flex; gap:10px; width:100%; margin-top:6px; }
+.step-btn { flex:1; padding:14px; border-radius:14px; border:none; cursor:pointer; font-size:15px; font-weight:600; font-family:inherit; }
+.step-btn:active { opacity:0.75; }
+.step-btn-back { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); }
+.step-btn-next { background:rgba(0,180,255,0.18); color:rgba(0,200,255,0.9); border:0.5px solid rgba(0,200,255,0.25); }
+.step-btn-save { background:rgba(60,220,100,0.18); color:rgba(60,220,100,0.95); border:0.5px solid rgba(60,220,100,0.28); }
+
+/* DAY PICKER */
+.day-picker-preview { display:flex; align-items:center; gap:12px; padding:12px 0 20px; border-bottom:0.5px solid rgba(255,255,255,0.08); margin-bottom:16px; }
+.day-picker-thumb { width:52px; height:52px; border-radius:12px; object-fit:cover; flex-shrink:0; }
+.day-picker-thumb-placeholder { width:52px; height:52px; border-radius:12px; background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.day-picker-thumb-placeholder svg { width:20px; height:20px; stroke:rgba(255,255,255,0.2); fill:none; }
+.day-picker-meal-name { font-size:16px; font-weight:600; color:rgba(255,255,255,0.9); }
+.day-picker-sub { font-size:12px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.day-option { display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:0.5px solid rgba(255,255,255,0.07); cursor:pointer; }
+.day-option:last-child { border-bottom:none; }
+.day-option:active { opacity:0.6; }
+.day-option-name { font-size:16px; font-weight:600; color:rgba(255,255,255,0.88); }
+.day-option-date { font-size:13px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.day-option-right { display:flex; align-items:center; gap:8px; }
+.day-option-taken { font-size:13px; color:rgba(255,255,255,0.3); font-style:italic; max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.day-option-check { width:28px; height:28px; border-radius:50%; background:rgba(60,220,100,0.15); display:flex; align-items:center; justify-content:center; }
+.day-option-check svg { width:14px; height:14px; stroke:rgba(60,220,100,0.9); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+
+/* SETTINGS */
+.settings-section { margin-bottom:26px; }
+.settings-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.32); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:12px; }
+.settings-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:0.5px solid rgba(255,255,255,0.07); }
+.settings-row:last-child { border-bottom:none; }
+.settings-row-label { font-size:14px; color:rgba(255,255,255,0.6); }
+.settings-row-value { font-size:14px; font-weight:600; color:rgba(255,255,255,0.85); }
+.skin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.skin-swatch { height:42px; border-radius:10px; border:2px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; letter-spacing:0.2px; transition:transform 0.15s,border-color 0.2s,opacity 0.2s; opacity:0.7; }
+.skin-swatch:active { transform:scale(0.94); }
+.skin-swatch.active { border-color:rgba(255,255,255,0.8); opacity:1; }
+.skin-swatch[data-skin="ocean"]  { background:#003d5c; color:#5dd4f0; }
+.skin-swatch[data-skin="ember"]  { background:#4a1a00; color:#ff8c42; }
+.skin-swatch[data-skin="forest"] { background:#0a2e1a; color:#3ddc84; }
+.skin-swatch[data-skin="violet"] { background:#1e0040; color:#c47aff; }
+.skin-swatch[data-skin="rose"]   { background:#3d001a; color:#ff6b9d; }
+.skin-swatch[data-skin="gold"]   { background:#2e1f00; color:#ffcc00; }
+.skin-swatch[data-skin="arctic"] { background:#001a2e; color:#a0e8ff; }
+.io-row { display:flex; gap:10px; }
+.io-btn { flex:1; padding:13px; border-radius:14px; border:0.5px solid rgba(255,255,255,0.13); cursor:pointer; background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8); font-size:14px; font-weight:500; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px; }
+.io-btn:active { background:rgba(255,255,255,0.14); }
+.io-btn svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+
+/* PLANNER TABS */
+.planner-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.planner-tab { flex:1; padding:11px; border-radius:12px; border:none; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; transition:background 0.2s,color 0.2s; }
+.planner-tab { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); box-shadow:0 0 0 0.5px rgba(255,255,255,0.1) inset; }
+.planner-tab.active { background:rgba(255,255,255,0.18); color:rgba(255,255,255,0.95); box-shadow:0 0 0 0.5px rgba(255,255,255,0.25) inset; }
+
+/* TOAST */
+.toast { position:fixed; bottom:calc(110px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%) translateY(20px); background:rgba(22,22,22,0.94); backdrop-filter:blur(16px); color:rgba(255,255,255,0.9); font-size:14px; font-weight:500; padding:10px 20px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity 0.25s,transform 0.25s; white-space:nowrap; z-index:40; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+#photo-input,#edit-photo-input,#import-input { display:none; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div><div class="orb orb-4"></div>
+<div class="vignette"></div><div class="noise"></div>
+
+<div class="top-bar">
+  <div class="top-bar-left"><span class="view-label" id="view-label">My Meals</span></div>
+  <div class="top-bar-right">
+    <button class="icon-btn" id="search-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></button>
+    <button class="icon-btn" id="settings-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </div>
+</div>
+
+<div class="search-bar" id="search-bar">
+  <input class="search-input" id="search-input" type="text" placeholder="Search meals…">
+  <button class="search-cancel" id="search-cancel">Cancel</button>
+</div>
+
+<main class="main" id="main">
+  <div class="empty-state" id="empty-state">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M8 12h8M12 8v8"/></svg>
+    <p id="empty-text">No meals yet<br>Tap + to add one</p>
+  </div>
+  <div class="cards-grid" id="cards-grid"></div>
+  <div class="planner-grid" id="planner-grid" style="display:none"></div>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn" id="btn-add"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <div class="nav-divider"></div>
+  <button class="nav-btn home-btn nav-active" id="btn-home"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg></button>
+  <div class="nav-divider"></div>
+  <button class="nav-btn" id="btn-planner"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- Day Picker -->
+<div class="sheet-overlay" id="daypick-overlay"></div>
+<div class="sheet" id="daypick-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><span class="sheet-title">Add to Plan</span><button class="sheet-btn" id="daypick-cancel">Cancel</button></div>
+  <div class="sheet-body"><div class="day-picker-preview" id="daypick-preview"></div><div id="daypick-options"></div></div>
+</div>
+
+<!-- Add Sheet -->
+<div class="sheet-overlay" id="add-overlay"></div>
+<div class="sheet" id="add-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><span class="sheet-title" id="step-title">Add Photo</span><button class="sheet-btn" id="step-skip">Skip</button></div>
+  <div class="sheet-body" style="align-items:center">
+    <div class="step-dots"><div class="step-dot active" id="dot-0"></div><div class="step-dot" id="dot-1"></div><div class="step-dot" id="dot-2"></div><div class="step-dot" id="dot-3"></div></div>
+    <div class="step-wrap active" id="step-0">
+      <div class="photo-picker" id="photo-picker" style="width:100%">
+        <div class="pick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Tap to add photo</span></div>
+        <img id="photo-preview" src="" alt="" style="display:none">
+        <button class="remove-photo-btn" id="remove-photo"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <input type="file" id="photo-input" accept="image/*">
+      <p class="step-hint">Camera or gallery</p>
+      <div class="step-nav" style="margin-top:20px"><button class="step-btn step-btn-next" id="s0next">Next →</button></div>
+    </div>
+    <div class="step-wrap" id="step-1">
+      <div class="field" style="width:100%"><label>Meal Name</label><input type="text" id="input-name" placeholder="e.g. Chicken Tikka Masala"></div>
+      <div class="step-nav"><button class="step-btn step-btn-back" id="s1back">← Back</button><button class="step-btn step-btn-next" id="s1next">Next →</button></div>
+    </div>
+    <div class="step-wrap" id="step-2">
+      <div class="field" style="width:100%"><label>Ingredients</label><textarea id="input-ingredients" placeholder="e.g. chicken, tomatoes, cream…"></textarea></div>
+      <div class="step-nav"><button class="step-btn step-btn-back" id="s2back">← Back</button><button class="step-btn step-btn-next" id="s2next">Next →</button></div>
+    </div>
+    <div class="step-wrap" id="step-3">
+      <div class="field" style="width:100%"><label>My Notes</label><textarea id="input-notes" placeholder="Tips, variations…"></textarea></div>
+      <div class="step-nav"><button class="step-btn step-btn-back" id="s3back">← Back</button><button class="step-btn step-btn-save" id="s3save">Save Meal ✓</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Sheet -->
+<div class="sheet-overlay" id="edit-overlay"></div>
+<div class="sheet" id="edit-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><span class="sheet-title">Edit Meal</span><button class="sheet-btn" id="edit-save">Save</button></div>
+  <div class="sheet-body">
+    <div class="photo-picker" id="edit-photo-picker">
+      <div class="pick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Tap to change photo</span></div>
+      <img id="edit-photo-preview" src="" alt="" style="display:none">
+      <button class="remove-photo-btn" id="edit-remove-photo"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="file" id="edit-photo-input" accept="image/*">
+    <div class="field"><label>Meal Name</label><input type="text" id="edit-name"></div>
+    <div class="field"><label>Ingredients</label><textarea id="edit-ingredients"></textarea></div>
+    <div class="field"><label>My Notes</label><textarea id="edit-notes"></textarea></div>
+  </div>
+</div>
+
+<!-- Settings Sheet -->
+<div class="sheet-overlay" id="settings-overlay"></div>
+<div class="sheet" id="settings-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><span class="sheet-title">Settings</span><button class="sheet-btn" id="settings-close">Done</button></div>
+  <div class="sheet-body">
+    <div class="settings-section">
+      <div class="settings-label">Library</div>
+      <div class="settings-row"><span class="settings-row-label">Total Meals</span><span class="settings-row-value" id="stat-total">0</span></div>
+      <div class="settings-row"><span class="settings-row-label">Planned</span><span class="settings-row-value" id="stat-planned">0</span></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Colour Skin</div>
+      <div class="skin-grid">
+        <div class="skin-swatch" data-skin="ocean">Ocean</div>
+        <div class="skin-swatch" data-skin="ember">Ember</div>
+        <div class="skin-swatch" data-skin="forest">Forest</div>
+        <div class="skin-swatch" data-skin="violet">Violet</div>
+        <div class="skin-swatch" data-skin="rose">Rose</div>
+        <div class="skin-swatch" data-skin="gold">Gold</div>
+        <div class="skin-swatch" data-skin="arctic">Arctic</div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Data</div>
+      <div class="io-row">
+        <button class="io-btn" id="export-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+        <button class="io-btn" id="import-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
+        <input type="file" id="import-input" accept=".json">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ FIREFLIES ══ */
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+const SKINS_C={
+  ocean: [{r:0,g:229,b:255},{r:0,g:180,b:255},{r:80,g:200,b:255},{r:0,g:100,b:255},{r:140,g:230,b:255}],
+  ember: [{r:255,g:120,b:0},{r:220,g:80,b:0},{r:255,g:60,b:0},{r:200,g:140,b:30},{r:255,g:160,b:50}],
+  forest:[{r:0,g:220,b:100},{r:0,g:180,b:80},{r:60,g:200,b:80},{r:0,g:140,b:60},{r:80,g:230,b:120}],
+  violet:[{r:180,g:0,b:255},{r:140,g:0,b:220},{r:200,g:60,b:255},{r:100,g:0,b:200},{r:220,g:100,b:255}],
+  rose:  [{r:255,g:80,b:140},{r:220,g:50,b:100},{r:255,g:120,b:160},{r:180,g:30,b:80},{r:255,g:100,b:150}],
+  gold:  [{r:255,g:200,b:0},{r:220,g:160,b:0},{r:255,g:180,b:30},{r:200,g:140,b:0},{r:255,g:220,b:80}],
+  arctic:[{r:180,g:240,b:255},{r:100,g:200,b:240},{r:140,g:220,b:255},{r:60,g:160,b:220},{r:200,g:230,b:255}]
+};
+let COLOURS=SKINS_C.ocean;
+const TOTAL=50;
+const SM={active:false,flies:[],cx:0,cy:0,holdFor:0,cooldown:200,
+  tick(f){
+    if(this.active){if(--this.holdFor<=0){this.flies.forEach(i=>{f[i].st=null;});this.flies=[];this.active=false;this.cooldown=300+Math.floor(Math.random()*400);}}
+    else{if(--this.cooldown<=0){this.cx=W*.15+Math.random()*W*.7;this.cy=H*.15+Math.random()*H*.7;const n=4+Math.floor(Math.random()*5);const idx=[],pool=[...Array(TOTAL).keys()];for(let i=0;i<n;i++){const p=Math.floor(Math.random()*pool.length);idx.push(pool.splice(p,1)[0]);}idx.forEach(i=>{f[i].st={x:this.cx+(Math.random()-.5)*50,y:this.cy+(Math.random()-.5)*50};});this.flies=idx;this.holdFor=180+Math.floor(Math.random()*300);this.active=true;}}
+  }
+};
+class Firefly{
+  constructor(){this.reset();}
+  reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.rc();this.size=1.2+Math.random()*2.2;this.angle=Math.random()*Math.PI*2;this.spd=Math.random()*.4;this.tspd=.3+Math.random()*1.4;this.drift=(Math.random()-.5)*.025;this.ci=40+Math.floor(Math.random()*120);this.op=Math.random();this.top=.3+Math.random()*.85;this.os=.008+Math.random()*.018;this.trail=[];this.mt=6+Math.floor(Math.random()*10);this.st=null;}
+  rc(){const c=COLOURS[Math.floor(Math.random()*COLOURS.length)];this.r=c.r;this.g=c.g;this.b=c.b;}
+  update(){const px=this.x,py=this.y;if(this.st){const dx=this.st.x-this.x,dy=this.st.y-this.y;this.x+=dx*.008;this.y+=dy*.008;this.x+=(Math.random()-.5)*.4;this.y+=(Math.random()-.5)*.4;}else{this.spd+=(this.tspd-this.spd)*.025;if(--this.ci<=0){this.tspd=.1+Math.random()*1.6;this.ci=50+Math.floor(Math.random()*140);if(Math.random()>.4)this.drift=(Math.random()-.5)*.04;}this.angle+=this.drift;this.x+=Math.cos(this.angle)*this.spd;this.y+=Math.sin(this.angle)*this.spd;if(this.x<-20)this.x=W+20;if(this.x>W+20)this.x=-20;if(this.y<-20)this.y=H+20;if(this.y>H+20)this.y=-20;}this.trail.push({x:px,y:py});if(this.trail.length>this.mt)this.trail.shift();this.op+=(this.top-this.op)*this.os;if(Math.abs(this.op-this.top)<.02)this.top=.15+Math.random()*.85;}
+  draw(){for(let i=0;i<this.trail.length;i++){const t=i/this.trail.length;ctx.beginPath();ctx.arc(this.trail[i].x,this.trail[i].y,Math.max(.1,this.size*t*.7),0,Math.PI*2);ctx.fillStyle=`rgba(${this.r},${this.g},${this.b},${t*this.op*.35})`;ctx.fill();}const glow=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size*5);glow.addColorStop(0,`rgba(${this.r},${this.g},${this.b},${this.op*.5})`);glow.addColorStop(.4,`rgba(${this.r},${this.g},${this.b},${this.op*.15})`);glow.addColorStop(1,`rgba(${this.r},${this.g},${this.b},0)`);ctx.beginPath();ctx.arc(this.x,this.y,this.size*5,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fillStyle=`rgba(${this.r},${this.g},${this.b},${this.op})`;ctx.shadowColor=`rgba(${this.r},${this.g},${this.b},.9)`;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;}
+}
+const flies=Array.from({length:TOTAL},()=>new Firefly());
+function loop(){ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--bg')||'#03060f';ctx.fillRect(0,0,W,H);SM.tick(flies);flies.forEach(f=>{f.update();f.draw();});requestAnimationFrame(loop);}
+loop();
+
+/* ══ HELPERS ══ */
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function getDayLabel(n){return n===0?'Today':n===1?'Tomorrow':new Date(Date.now()+n*864e5).toLocaleDateString('en-GB',{weekday:'long'});}
+function getDayDate(n){return new Date(Date.now()+n*864e5).toLocaleDateString('en-GB',{day:'numeric',month:'long'});}
+
+/* ══ FIX #9: Safe ID counter (no Date.now() collision) ══ */
+function makeId(){
+  const base=Date.now();
+  makeId._n=(makeId._n||0)+1;
+  return String(base)+'_'+makeId._n;
+}
+
+/* ══ FIX #3: Photo compression before base64 storage ══
+   Resizes to max 800px and compresses to JPEG 0.75 quality.
+   Keeps typical photo under ~150KB in localStorage instead of 2–4MB. */
+function compressPhoto(dataUrl,cb){
+  const img=new Image();
+  img.onload=()=>{
+    const MAX=800;
+    let w=img.width,h=img.height;
+    if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    cb(cv.toDataURL('image/jpeg',0.75));
+  };
+  img.src=dataUrl;
+}
+
+/* ══ FIX #2: Safe localStorage wrapper ══ */
+function safeSave(key,value){
+  try{localStorage.setItem(key,value);}
+  catch(e){showToast('Storage full — remove some photos');}
+}
+
+/* ══ STATE ══ */
+let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
+
+/* ══ FIX #7: Plan depth is a single constant ══ */
+const PLAN_DAYS=3;
+const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i),null]));
+let plan=JSON.parse(localStorage.getItem('wtc-plan')||JSON.stringify(_defaultPlan));
+
+// Normalise all IDs to strings on load
+meals.forEach(m=>{m.id=String(m.id);});
+Object.keys(plan).forEach(k=>{if(plan[k]!=null)plan[k]=String(plan[k]);});
+// Clean plan entries that don't match any meal
+Object.keys(plan).forEach(k=>{if(plan[k]&&!meals.find(m=>m.id===plan[k]))plan[k]=null;});
+
+let removedIngredients=JSON.parse(localStorage.getItem('wtc-ri')||'[]');
+let checkedIngredients=JSON.parse(localStorage.getItem('wtc-ci')||'[]');
+let viewMode='home';
+let plannerTab=localStorage.getItem('wtc-tab')||'plan';
+let currentSkin=localStorage.getItem('wtc-skin')||'ocean';
+let currentPhoto=null,editPhoto=null,editIdx=-1,searchQuery='',sy=0;
+
+function saveMeals(){safeSave('wtc-meals',JSON.stringify(meals));}
+function savePlan(){safeSave('wtc-plan',JSON.stringify(plan));}
+function saveRI(){safeSave('wtc-ri',JSON.stringify(removedIngredients));}
+function saveCI(){safeSave('wtc-ci',JSON.stringify(checkedIngredients));}
+
+/* ══ PLANNED IDs ══ */
+function getPlannedIds(){return Object.values(plan).filter(v=>v!=null);}
+function isPlanned(mealId){return getPlannedIds().includes(String(mealId));}
+function getMealById(id){return meals.find(m=>m.id===String(id))||null;}
+
+/* ══ FIX #6: Shared photo-picker factory (eliminates duplicate add/edit code) ══ */
+function makePhotoPicker(pickerId,inputId,previewId,onPhoto){
+  const picker=document.getElementById(pickerId);
+  const input=document.getElementById(inputId);
+  const preview=document.getElementById(previewId);
+  const removeBtn=picker.querySelector('.remove-photo-btn');
+
+  picker.addEventListener('click',()=>input.click());
+  input.addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      compressPhoto(ev.target.result,compressed=>{
+        preview.src=compressed;preview.style.display='block';
+        picker.classList.add('has-photo');
+        onPhoto(compressed);
+      });
+    };
+    r.readAsDataURL(f);
+  });
+  removeBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    preview.style.display='none';picker.classList.remove('has-photo');
+    input.value='';onPhoto(null);
+  });
+}
+
+// Wire up both photo pickers once at load time
+makePhotoPicker('photo-picker','photo-input','photo-preview',v=>{currentPhoto=v;});
+makePhotoPicker('edit-photo-picker','edit-photo-input','edit-photo-preview',v=>{editPhoto=v;});
+
+/* ══ RENDER HOME ══ */
+// FIX #4 (partial): track rendered card IDs to avoid full rebuild when nothing changed
+let _lastRenderedKey='';
+
+function renderCards(slideDir=null){
+  stopAllShaking();
+  const grid=document.getElementById('cards-grid');
+  const planGrid=document.getElementById('planner-grid');
+  const empty=document.getElementById('empty-state');
+  const label=document.getElementById('view-label');
+
+  if(viewMode==='planner'){
+    grid.style.display='none';
+    planGrid.style.display='flex';
+    label.textContent='Meal Planner';
+    empty.style.display='none';
+    renderPlanner();
+    return;
+  }
+
+  grid.style.display='flex';
+  planGrid.style.display='none';
+  label.textContent='My Meals';
+
+  const plannedIds=getPlannedIds();
+  let list=meals.filter(m=>!plannedIds.includes(m.id));
+  if(searchQuery){const q=searchQuery.toLowerCase();list=list.filter(m=>(m.name||'').toLowerCase().includes(q)||(m.ingredients||'').toLowerCase().includes(q));}
+
+  document.getElementById('empty-text').innerHTML=searchQuery?'No results found':'No meals yet<br>Tap + to add one';
+  empty.style.display=list.length===0?'flex':'none';
+
+  // FIX #4: keyed diffing — only rebuild when list actually changes
+  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)).join(',');
+  if(newKey===_lastRenderedKey&&!slideDir){updateStats();return;}
+  _lastRenderedKey=newKey;
+
+  const ac=slideDir==='right'?'slide-in-right':slideDir==='left'?'slide-in-left':'';
+  grid.innerHTML='';
+
+  list.forEach(meal=>{
+    const idx=meals.indexOf(meal);
+    const planned=isPlanned(meal.id);
+    const card=document.createElement('div');
+    card.className='meal-card'+(ac?' '+ac:'');
+
+    const photoHTML=meal.photo
+      ?`<img class="card-photo" src="${meal.photo}" alt="${esc(meal.name)}">`
+      :`<div class="card-photo-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+
+    card.innerHTML=`
+      ${photoHTML}
+      <div class="card-action-bar">
+        <button class="card-action-btn card-btn-edit" data-idx="${idx}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+        <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">${esc(meal.name)||'Untitled'}</div>
+          <button class="card-pick-btn${planned?' planned':''}" data-id="${meal.id}">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+        ${meal.ingredients?`<div class="card-ingredients">${esc(meal.ingredients)}</div>`:''}
+        ${meal.notes?`<div class="card-notes">${esc(meal.notes)}</div>`:''}
+      </div>`;
+
+    // Long press to reveal edit/delete
+    let pt,lf=false;
+    function sL(){lf=false;pt=setTimeout(()=>{lf=true;stopAllShaking();card.classList.add('shaking');},800);}
+    function cL(){clearTimeout(pt);}
+    card.addEventListener('touchstart',sL,{passive:true});
+    card.addEventListener('touchend',cL,{passive:true});
+    card.addEventListener('mousedown',sL);
+    card.addEventListener('mouseup',cL);
+    card.addEventListener('mouseleave',cL);
+
+    card.querySelector('.card-pick-btn').addEventListener('click',e=>{
+      e.stopPropagation();if(lf)return;
+      openDayPicker(meal.id);
+    });
+    card.querySelector('.card-btn-edit').addEventListener('click',e=>{
+      e.stopPropagation();openEditSheet(parseInt(e.currentTarget.dataset.idx));stopAllShaking();
+    });
+    card.querySelector('.card-btn-delete').addEventListener('click',e=>{
+      e.stopPropagation();
+      const i=parseInt(e.currentTarget.dataset.idx);
+      Object.keys(plan).forEach(k=>{if(plan[k]===meals[i].id)plan[k]=null;});
+      savePlan();meals.splice(i,1);saveMeals();stopAllShaking();
+      _lastRenderedKey=''; // force rebuild after delete
+      renderCards();
+    });
+
+    grid.appendChild(card);
+  });
+
+  updateStats();
+}
+
+function stopAllShaking(){document.querySelectorAll('.meal-card.shaking').forEach(c=>c.classList.remove('shaking'));}
+// Registered once — FIX #1 (card version, this one was already safe)
+document.addEventListener('click',e=>{if(document.querySelector('.meal-card.shaking')&&!e.target.closest('.meal-card.shaking')&&!e.target.closest('.card-action-btn'))stopAllShaking();});
+
+/* ══ RENDER PLANNER ══ */
+function renderPlanner(){
+  const grid=document.getElementById('planner-grid');
+  grid.innerHTML='';
+
+  // FIX #8: tabs rendered with CSS classes (not inline style strings)
+  const tb=document.createElement('div');
+  tb.className='planner-tabs';
+  tb.innerHTML=`<button id="tp" class="planner-tab${plannerTab==='plan'?' active':''}">Meal Plan</button><button id="ts" class="planner-tab${plannerTab==='shop'?' active':''}">Shopping List</button>`;
+  grid.appendChild(tb);
+  tb.querySelector('#tp').onclick=()=>{plannerTab='plan';safeSave('wtc-tab','plan');renderPlanner();};
+  tb.querySelector('#ts').onclick=()=>{plannerTab='shop';safeSave('wtc-tab','shop');renderPlanner();};
+
+  if(plannerTab==='shop'){renderShoppingList(grid);return;}
+
+  // FIX #7: uses PLAN_DAYS constant instead of magic [0,1,2]
+  Array.from({length:PLAN_DAYS},(_,offset)=>{
+    const mealId=plan[String(offset)];
+    const meal=mealId?getMealById(mealId):null;
+    const card=document.createElement('div');
+    card.className='plan-day-card';
+    card.style.animationDelay=(offset*.07)+'s';
+
+    const slotContent=meal?`
+      ${meal.photo?`<img class="plan-slot-photo" src="${meal.photo}" alt="${esc(meal.name)}">`:`<div class="plan-slot-photo-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
+      <div class="plan-slot-info">
+        <div class="plan-slot-meal-name">${esc(meal.name)}</div>
+        ${meal.ingredients?`<div class="plan-slot-ingredients">${esc(meal.ingredients)}</div>`:''}
+      </div>
+      <button class="slot-delete-btn"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+    :`<div class="plan-slot-photo-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="plan-slot-info"><div class="plan-slot-empty-label">No meal planned</div></div>`;
+
+    card.innerHTML=`
+      <div class="plan-day-header"><div class="plan-day-name">${getDayLabel(offset)}</div><div class="plan-day-date">${getDayDate(offset)}</div></div>
+      <div class="plan-slot${meal?'':' empty'}">${slotContent}</div>`;
+
+    if(meal){
+      const slot=card.querySelector('.plan-slot');
+      let spt;
+      function sSlot(){spt=setTimeout(()=>{stopAllSlots();slot.classList.add('slot-shaking');},800);}
+      function cSlot(){clearTimeout(spt);}
+      slot.addEventListener('touchstart',sSlot,{passive:true});
+      slot.addEventListener('touchend',cSlot,{passive:true});
+      slot.addEventListener('mousedown',sSlot);
+      slot.addEventListener('mouseup',cSlot);
+      slot.addEventListener('mouseleave',cSlot);
+
+      slot.querySelector('.slot-delete-btn').addEventListener('click',e=>{
+        e.stopPropagation();
+        plan[String(offset)]=null;
+        savePlan();stopAllSlots();renderPlanner();
+        showToast('Meal returned to Home');
+      });
+    }
+    grid.appendChild(card);
+  });
+
+  // FIX #1 (CRITICAL): handleSlotClick registered once globally, not inside renderPlanner
+  // (see bottom of file — registered at load time)
+}
+
+function stopAllSlots(){document.querySelectorAll('.plan-slot.slot-shaking').forEach(s=>s.classList.remove('slot-shaking'));}
+
+// FIX #1 (CRITICAL — memory leak): registered ONCE at load, not inside renderPlanner
+function handleSlotClick(e){if(document.querySelector('.plan-slot.slot-shaking')&&!e.target.closest('.plan-slot.slot-shaking')&&!e.target.closest('.slot-delete-btn'))stopAllSlots();}
+document.addEventListener('click',handleSlotClick);
+
+/* ══ SHOPPING LIST ══ */
+function renderShoppingList(grid){
+  // FIX #7: uses PLAN_DAYS constant
+  const plannedMeals=Array.from({length:PLAN_DAYS},(_,o)=>{const id=plan[String(o)];return id?getMealById(id):null;}).filter(Boolean);
+
+  if(plannedMeals.length===0){
+    const d=document.createElement('div');
+    d.className='shop-empty-msg';
+    d.innerHTML='Plan some meals first<br>and your ingredients will appear here';
+    grid.appendChild(d);return;
+  }
+
+  const allItems=[],seen=new Set();
+  plannedMeals.forEach(meal=>{
+    if(!meal.ingredients)return;
+    meal.ingredients.split(/[,\n]+/).map(s=>s.trim()).filter(Boolean).forEach(ing=>{
+      const key=ing.toLowerCase();
+      if(!seen.has(key)){seen.add(key);allItems.push({text:ing,key});}
+    });
+  });
+
+  const visible=allItems.filter(i=>!removedIngredients.includes(i.key));
+
+  if(visible.length===0&&allItems.length>0){
+    const d=document.createElement('div');d.className='shop-empty-msg';d.textContent='All ingredients removed';grid.appendChild(d);
+    const rb=document.createElement('button');rb.className='shop-action-btn';rb.textContent='Restore all';
+    rb.onclick=()=>{removedIngredients.splice(0,removedIngredients.length);saveRI();renderPlanner();};
+    grid.appendChild(rb);return;
+  }
+
+  if(visible.length===0){
+    const d=document.createElement('div');d.className='shop-empty-msg';d.textContent='No ingredients found — add ingredients to your meals';grid.appendChild(d);return;
+  }
+
+  const sec=document.createElement('div');
+  sec.innerHTML=`<div class="shop-section-title">${visible.length} ingredient${visible.length!==1?'s':''}</div>`;
+
+  visible.forEach(item=>{
+    const checked=checkedIngredients.includes(item.key);
+    const row=document.createElement('div');
+    row.className='shop-item'+(checked?' checked':'');
+
+    const tickSvg=checked?'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':'';
+    row.innerHTML=`
+      <div class="shop-check">${tickSvg}</div>
+      <div class="shop-item-text">${esc(item.text)}</div>
+      <button class="shop-remove-btn" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+
+    row.querySelector('.shop-check').addEventListener('click',e=>{
+      e.stopPropagation();
+      const ci=checkedIngredients.indexOf(item.key);
+      if(ci>-1)checkedIngredients.splice(ci,1);else checkedIngredients.push(item.key);
+      saveCI();renderPlanner();
+    });
+
+    row.querySelector('.shop-remove-btn').addEventListener('click',e=>{
+      e.stopPropagation();
+      if(!removedIngredients.includes(item.key))removedIngredients.push(item.key);
+      const ci=checkedIngredients.indexOf(item.key);if(ci>-1)checkedIngredients.splice(ci,1);
+      saveRI();saveCI();renderPlanner();
+    });
+
+    sec.appendChild(row);
+  });
+  grid.appendChild(sec);
+
+  if(removedIngredients.length>0){
+    const rb=document.createElement('button');rb.className='shop-action-btn';rb.textContent=`Restore removed (${removedIngredients.length})`;
+    rb.onclick=()=>{removedIngredients.splice(0,removedIngredients.length);saveRI();renderPlanner();};
+    grid.appendChild(rb);
+  }
+  if(checkedIngredients.length>0){
+    const cb=document.createElement('button');cb.className='shop-action-btn';cb.textContent='Clear ticked';cb.style.borderColor='rgba(255,255,255,0.15)';cb.style.color='rgba(255,255,255,0.5)';cb.style.background='rgba(255,255,255,0.05)';
+    cb.onclick=()=>{checkedIngredients.splice(0,checkedIngredients.length);saveCI();renderPlanner();};
+    grid.appendChild(cb);
+  }
+}
+
+/* ══ DAY PICKER ══ */
+function openDayPicker(mealId){
+  const meal=getMealById(mealId);if(!meal)return;
+  const prev=document.getElementById('daypick-preview');
+  prev.innerHTML=`
+    ${meal.photo?`<img class="day-picker-thumb" src="${meal.photo}" alt="">`:`<div class="day-picker-thumb-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
+    <div><div class="day-picker-meal-name">${esc(meal.name)}</div><div class="day-picker-sub">Choose a day</div></div>`;
+
+  const opts=document.getElementById('daypick-options');opts.innerHTML='';
+  // FIX #7: uses PLAN_DAYS constant
+  Array.from({length:PLAN_DAYS},(_,offset)=>{
+    const assignedId=plan[String(offset)];
+    const assignedMeal=assignedId?getMealById(assignedId):null;
+    const isThis=assignedId===String(mealId);
+    const row=document.createElement('div');row.className='day-option';
+    row.innerHTML=`
+      <div><div class="day-option-name">${getDayLabel(offset)}</div><div class="day-option-date">${getDayDate(offset)}</div></div>
+      <div class="day-option-right">
+        ${assignedMeal&&!isThis?`<div class="day-option-taken">${esc(assignedMeal.name)}</div>`:''}
+        ${isThis?`<div class="day-option-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`:''}
+      </div>`;
+    row.addEventListener('click',()=>{
+      plan[String(offset)]=String(mealId);
+      savePlan();closeDayPicker();
+      _lastRenderedKey=''; // force card re-render (planned state changed)
+      renderCards();
+      showToast(`Planned for ${getDayLabel(offset)} ✓`);
+    });
+    opts.appendChild(row);
+  });
+
+  document.getElementById('daypick-sheet').classList.add('open');
+  document.getElementById('daypick-overlay').classList.add('open');
+}
+function closeDayPicker(){document.getElementById('daypick-sheet').classList.remove('open');document.getElementById('daypick-overlay').classList.remove('open');}
+document.getElementById('daypick-cancel').addEventListener('click',closeDayPicker);
+document.getElementById('daypick-overlay').addEventListener('click',closeDayPicker);
+document.getElementById('daypick-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+document.getElementById('daypick-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeDayPicker();},{passive:true});
+
+/* ══ NAV ══ */
+document.getElementById('btn-home').addEventListener('click',()=>{
+  if(viewMode==='home'){shuffleArray(meals);saveMeals();_lastRenderedKey='';renderCards();}
+  else{viewMode='home';document.getElementById('btn-home').classList.add('nav-active');document.getElementById('btn-planner').classList.remove('nav-active','planner-active');renderCards('left');document.getElementById('main').scrollTo({top:0,behavior:'smooth'});}
+});
+document.getElementById('btn-planner').addEventListener('click',()=>{
+  viewMode='planner';document.getElementById('btn-planner').classList.add('nav-active','planner-active');document.getElementById('btn-home').classList.remove('nav-active');renderCards('right');document.getElementById('main').scrollTo({top:0,behavior:'smooth'});
+});
+document.getElementById('btn-add').addEventListener('click',openAddSheet);
+
+/* ══ SEARCH ══ */
+document.getElementById('search-btn').addEventListener('click',()=>{document.getElementById('search-bar').classList.add('open');setTimeout(()=>document.getElementById('search-input').focus(),320);});
+document.getElementById('search-cancel').addEventListener('click',()=>{document.getElementById('search-bar').classList.remove('open');searchQuery='';document.getElementById('search-input').value='';_lastRenderedKey='';renderCards();});
+document.getElementById('search-input').addEventListener('input',()=>{searchQuery=document.getElementById('search-input').value.trim();_lastRenderedKey='';renderCards();});
+
+/* ══ ADD SHEET ══ */
+let step=0;
+const stepTitles=['Add Photo','Meal Name','Ingredients','Notes'];
+function goStep(n,back=false){
+  document.getElementById(`step-${step}`).classList.remove('active','back');
+  step=n;const el=document.getElementById(`step-${step}`);
+  el.classList.remove('back');if(back)el.classList.add('back');el.classList.add('active');
+  document.getElementById('step-title').textContent=stepTitles[step];
+  for(let i=0;i<4;i++)document.getElementById(`dot-${i}`).classList.toggle('active',i===step);
+  document.getElementById('step-skip').style.display=(step===0||step===2||step===3)?'block':'none';
+}
+function openAddSheet(){
+  step=0;currentPhoto=null;
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('photo-picker').classList.remove('has-photo');
+  document.getElementById('photo-input').value='';
+  document.getElementById('input-name').value='';
+  document.getElementById('input-ingredients').value='';
+  document.getElementById('input-notes').value='';
+  for(let i=0;i<4;i++){const e=document.getElementById(`step-${i}`);e.classList.remove('active','back');}
+  document.getElementById('step-0').classList.add('active');
+  document.getElementById('step-title').textContent=stepTitles[0];
+  for(let i=0;i<4;i++)document.getElementById(`dot-${i}`).classList.toggle('active',i===0);
+  document.getElementById('step-skip').style.display='block';
+  document.getElementById('add-sheet').classList.add('open');
+  document.getElementById('add-overlay').classList.add('open');
+}
+function closeAddSheet(){document.getElementById('add-sheet').classList.remove('open');document.getElementById('add-overlay').classList.remove('open');}
+document.getElementById('add-overlay').addEventListener('click',closeAddSheet);
+document.getElementById('step-skip').addEventListener('click',()=>{if(step<3)goStep(step+1);else doSaveMeal();});
+document.getElementById('add-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+document.getElementById('add-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeAddSheet();},{passive:true});
+document.getElementById('s0next').addEventListener('click',()=>goStep(1));
+document.getElementById('s1back').addEventListener('click',()=>goStep(0,true));
+document.getElementById('s1next').addEventListener('click',()=>{if(!document.getElementById('input-name').value.trim()){document.getElementById('input-name').focus();showToast('Please enter a meal name');return;}goStep(2);});
+document.getElementById('s2back').addEventListener('click',()=>goStep(1,true));
+document.getElementById('s2next').addEventListener('click',()=>goStep(3));
+document.getElementById('s3back').addEventListener('click',()=>goStep(2,true));
+document.getElementById('s3save').addEventListener('click',doSaveMeal);
+function doSaveMeal(){
+  const name=document.getElementById('input-name').value.trim();
+  if(!name){goStep(1,false);setTimeout(()=>document.getElementById('input-name').focus(),350);showToast('Please enter a meal name');return;}
+  // FIX #9: safe ID that won't collide on rapid inserts
+  meals.unshift({id:makeId(),name,ingredients:document.getElementById('input-ingredients').value.trim(),notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto});
+  saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();showToast('Meal saved ✓');
+}
+
+/* ══ EDIT SHEET ══ */
+function openEditSheet(idx){
+  editIdx=idx;const meal=meals[idx];editPhoto=meal.photo||null;
+  document.getElementById('edit-name').value=meal.name||'';
+  document.getElementById('edit-ingredients').value=meal.ingredients||'';
+  document.getElementById('edit-notes').value=meal.notes||'';
+  const p=document.getElementById('edit-photo-preview');
+  if(editPhoto){p.src=editPhoto;p.style.display='block';document.getElementById('edit-photo-picker').classList.add('has-photo');}
+  else{p.style.display='none';document.getElementById('edit-photo-picker').classList.remove('has-photo');}
+  document.getElementById('edit-photo-input').value='';
+  document.getElementById('edit-sheet').classList.add('open');document.getElementById('edit-overlay').classList.add('open');
+}
+function closeEditSheet(){document.getElementById('edit-sheet').classList.remove('open');document.getElementById('edit-overlay').classList.remove('open');}
+document.getElementById('edit-overlay').addEventListener('click',closeEditSheet);
+document.getElementById('edit-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+document.getElementById('edit-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeEditSheet();},{passive:true});
+document.getElementById('edit-save').addEventListener('click',()=>{
+  const name=document.getElementById('edit-name').value.trim();if(!name){document.getElementById('edit-name').focus();return;}
+  meals[editIdx].name=name;meals[editIdx].ingredients=document.getElementById('edit-ingredients').value.trim();meals[editIdx].notes=document.getElementById('edit-notes').value.trim();meals[editIdx].photo=editPhoto;
+  saveMeals();closeEditSheet();_lastRenderedKey='';renderCards();showToast('Meal updated ✓');
+});
+
+/* ══ SETTINGS ══ */
+function updateStats(){document.getElementById('stat-total').textContent=meals.length;document.getElementById('stat-planned').textContent=getPlannedIds().length;}
+function openSettings(){updateStats();document.getElementById('settings-sheet').classList.add('open');document.getElementById('settings-overlay').classList.add('open');}
+function closeSettings(){document.getElementById('settings-sheet').classList.remove('open');document.getElementById('settings-overlay').classList.remove('open');}
+document.getElementById('settings-btn').addEventListener('click',openSettings);
+document.getElementById('settings-overlay').addEventListener('click',closeSettings);
+document.getElementById('settings-close').addEventListener('click',closeSettings);
+document.getElementById('settings-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+document.getElementById('settings-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeSettings();},{passive:true});
+
+function applySkin(skin){
+  document.body.className=skin==='ocean'?'':`skin-${skin}`;
+  COLOURS=SKINS_C[skin]||SKINS_C.ocean;
+  flies.forEach(f=>f.rc());
+  currentSkin=skin;safeSave('wtc-skin',skin);
+  document.querySelectorAll('.skin-swatch').forEach(s=>s.classList.toggle('active',s.dataset.skin===skin));
+}
+document.querySelectorAll('.skin-swatch').forEach(s=>s.addEventListener('click',()=>applySkin(s.dataset.skin)));
+
+document.getElementById('export-btn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({version:3,meals,plan},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`wtc-meals-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);showToast('Exported ✓');
+});
+document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-input').click());
+document.getElementById('import-input').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      const imp=Array.isArray(parsed)?parsed:(parsed.meals||[]);
+      if(!Array.isArray(imp))throw 0;
+      imp.forEach(m=>{m.id=String(m.id);});
+      const ids=new Set(meals.map(m=>m.id));
+      const fresh=imp.filter(m=>!ids.has(m.id));
+      meals=[...fresh,...meals];saveMeals();_lastRenderedKey='';renderCards();showToast(`Imported ${fresh.length} meal${fresh.length!==1?'s':''} ✓`);
+    }catch{showToast('Invalid file');}
+    e.target.value='';
+  };r.readAsText(f);
+});
+
+/* ══ PWA: INSTALL PROMPT + UPDATE DETECTION ══ */
+let _deferredInstall = null;
+
+// Capture the browser's beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  // Only show if not already installed and user hasn't dismissed
+  if (!localStorage.getItem('wtc-install-dismissed')) {
+    const banner = document.getElementById('install-banner');
+    banner.style.display = 'flex';
+  }
+});
+
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!_deferredInstall) return;
+  _deferredInstall.prompt();
+  const { outcome } = await _deferredInstall.userChoice;
+  _deferredInstall = null;
+  document.getElementById('install-banner').style.display = 'none';
+  if (outcome === 'accepted') showToast('WTC installed ✓');
+});
+
+document.getElementById('install-dismiss').addEventListener('click', () => {
+  document.getElementById('install-banner').style.display = 'none';
+  localStorage.setItem('wtc-install-dismissed', '1');
+});
+
+// Hide banner once installed
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+  _deferredInstall = null;
+});
+
+// Service worker registration + update detection
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+
+      // Detect new SW waiting to activate
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New content available — show update banner
+            const banner = document.getElementById('update-banner');
+            banner.style.display = 'flex';
+          }
+        });
+      });
+
+      // Reload when user clicks "Reload" and new SW takes over
+      document.getElementById('update-btn').addEventListener('click', () => {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        window.location.reload();
+      });
+
+    } catch (err) {
+      console.warn('SW registration failed:', err);
+    }
+  });
+
+  // When SW controller changes (new SW took over), reload to use new version
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; window.location.reload(); }
+  });
+}
+
+/* ══ INIT ══ */
+applySkin(currentSkin);
+savePlan();
+renderCards();
+</script>
+
+<!-- PWA Install banner -->
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(12,18,32,0.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 -1px 0 rgba(255,255,255,0.08);display:none;align-items:center;gap:12px;">
+  <img src="icon-192-any.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.92);">Install WTC</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-top:2px;">Add to your home screen for the best experience</div>
+  </div>
+  <button id="install-btn" style="background:rgba(0,180,255,0.2);border:0.5px solid rgba(0,200,255,0.3);color:rgba(0,200,255,0.95);font-size:14px;font-weight:600;font-family:inherit;padding:9px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;">Install</button>
+  <button id="install-dismiss" style="background:none;border:none;cursor:pointer;padding:4px;color:rgba(255,255,255,0.35);font-size:20px;line-height:1;flex-shrink:0;">×</button>
+</div>
+
+<!-- Update available banner -->
+<div id="update-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:50;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:rgba(60,220,100,0.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(60,220,100,0.15);align-items:center;gap:10px;">
+  <div style="flex:1;font-size:14px;color:rgba(255,255,255,0.85);">A new version is available</div>
+  <button id="update-btn" style="background:rgba(60,220,100,0.2);border:0.5px solid rgba(60,220,100,0.35);color:rgba(60,220,100,0.95);font-size:13px;font-weight:600;font-family:inherit;padding:7px 14px;border-radius:16px;cursor:pointer;">Reload</button>
+</div>
+</body>
+</html>
