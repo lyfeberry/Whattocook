@@ -1,11 +1,17 @@
-// WTC Service Worker — cache-first with update detection
+// WTC Service Worker — network-first for shell, cache-first for assets
 // Bump CACHE version any time you deploy new files.
-const CACHE = 'wtc-v4';
+const CACHE = 'wtc-v5';
 
-const FILES = [
+// These files are fetched network-first so updates are always picked up
+const NETWORK_FIRST = [
   './',
   './index.html',
+  './sw.js',
   './manifest.json',
+];
+
+// These are cached aggressively — they rarely change
+const CACHE_FIRST_FILES = [
   './favicon.ico',
   './favicon-32.png',
   './apple-touch-icon.png',
@@ -23,16 +29,18 @@ const FILES = [
   './screenshot-mobile.png',
 ];
 
-// Install: cache all app shell files
+const ALL_FILES = [...NETWORK_FIRST, ...CACHE_FIRST_FILES];
+
+// Install: pre-cache everything, activate immediately
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(FILES))
-      .then(() => self.skipWaiting())
+      .then(c => c.addAll(ALL_FILES))
+      .then(() => self.skipWaiting())   // don't wait — take control immediately
   );
 });
 
-// Activate: delete old caches
+// Activate: delete old caches, claim all clients, then tell them to reload
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -40,35 +48,64 @@ self.addEventListener('activate', e => {
         keys.filter(k => k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => {
+        // Tell every open tab/window to reload so they get the new version
+        return self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => client.navigate(client.url));
+        });
+      })
   );
 });
 
-// Fetch: cache-first for app shell, network-first for everything else
+// Helper: is this URL in the network-first list?
+function isNetworkFirst(url) {
+  const path = new URL(url).pathname;
+  return NETWORK_FIRST.some(f => {
+    const fPath = new URL(f, self.location).pathname;
+    return path === fPath || (path.endsWith('/') && f === './');
+  });
+}
+
 self.addEventListener('fetch', e => {
-  // Only handle GET requests
   if (e.request.method !== 'GET') return;
 
+  const url = e.request.url;
+
+  // Network-first: try network, fall back to cache
+  if (isNetworkFirst(url)) {
+    e.respondWith(
+      fetch(e.request)
+        .then(response => {
+          if (response.ok && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(e.request)
+          .then(cached => cached || caches.match('./index.html'))
+        )
+    );
+    return;
+  }
+
+  // Cache-first with background revalidation for assets
   e.respondWith(
     caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(response => {
-        // Cache successful responses for app files
+      const networkFetch = fetch(e.request).then(response => {
         if (response.ok && response.type === 'basic') {
           const clone = response.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return response;
-      }).catch(() => {
-        // Offline fallback for navigation requests
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
+      }).catch(() => null);
+
+      return cached || networkFetch;
     })
   );
 });
 
-// Allow page to trigger SW update via postMessage
+// Allow page to manually trigger SW update via postMessage
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
