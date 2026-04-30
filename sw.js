@@ -1,6 +1,6 @@
 // WTC Service Worker — cache-first with update detection
 // Bump CACHE version any time you deploy new files.
-const CACHE = 'wtc-v3';
+const CACHE = 'wtc-v4';
 
 const FILES = [
   './',
