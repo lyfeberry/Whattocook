@@ -265,7 +265,19 @@ canvas { position:fixed; inset:0; z-index:1; }
 .toast { position:fixed; bottom:calc(110px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%) translateY(20px); background:rgba(22,22,22,0.94); backdrop-filter:blur(16px); color:rgba(255,255,255,0.9); font-size:14px; font-weight:500; padding:10px 20px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity 0.25s,transform 0.25s; white-space:nowrap; z-index:40; }
 .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-#photo-input,#edit-photo-input,#import-input { display:none; }
+#photo-input,#photo-camera-input,#edit-photo-input,#edit-photo-camera-input,#import-input { display:none; }
+
+/* ── Photo source bottom sheet ── */
+.photo-sheet-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:90; opacity:0; pointer-events:none; transition:opacity 0.22s; }
+.photo-sheet-backdrop.open { opacity:1; pointer-events:all; }
+.photo-sheet { position:fixed; bottom:0; left:0; right:0; background:#1c1c1e; border-radius:20px 20px 0 0; padding:12px 16px calc(28px + env(safe-area-inset-bottom,0px)); z-index:91; transform:translateY(100%); transition:transform 0.28s cubic-bezier(0.34,1.1,0.64,1); }
+.photo-sheet.open { transform:translateY(0); }
+.photo-sheet-title { text-align:center; font-size:13px; color:rgba(255,255,255,0.35); font-weight:500; margin-bottom:14px; }
+.photo-sheet-btn { display:flex; align-items:center; gap:14px; width:100%; background:rgba(255,255,255,0.07); border:none; border-radius:14px; color:rgba(255,255,255,0.9); font-size:16px; font-family:inherit; font-weight:500; padding:15px 18px; cursor:pointer; margin-bottom:10px; }
+.photo-sheet-btn:active { background:rgba(255,255,255,0.13); }
+.photo-sheet-btn svg { width:22px; height:22px; stroke:rgba(255,255,255,0.7); fill:none; stroke-width:1.8; flex-shrink:0; }
+.photo-sheet-cancel { display:block; width:100%; background:rgba(255,255,255,0.07); border:none; border-radius:14px; color:rgba(255,255,255,0.55); font-size:16px; font-family:inherit; font-weight:600; padding:15px; cursor:pointer; margin-top:4px; }
+.photo-sheet-cancel:active { background:rgba(255,255,255,0.13); }
 </style>
 </head>
 <body>
@@ -328,6 +340,7 @@ canvas { position:fixed; inset:0; z-index:1; }
         <button class="remove-photo-btn" id="remove-photo"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <input type="file" id="photo-input" accept="image/*">
+      <input type="file" id="photo-camera-input" accept="image/*" capture="environment">
       <p class="step-hint">Camera or gallery</p>
       <div class="step-nav" style="margin-top:20px"><button class="step-btn step-btn-next" id="s0next">Next →</button></div>
     </div>
@@ -358,6 +371,7 @@ canvas { position:fixed; inset:0; z-index:1; }
       <button class="remove-photo-btn" id="edit-remove-photo"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <input type="file" id="edit-photo-input" accept="image/*">
+    <input type="file" id="edit-photo-camera-input" accept="image/*" capture="environment">
     <div class="field"><label>Meal Name</label><input type="text" id="edit-name"></div>
     <div class="field"><label>Ingredients</label><textarea id="edit-ingredients"></textarea></div>
     <div class="field"><label>My Notes</label><textarea id="edit-notes"></textarea></div>
@@ -499,14 +513,36 @@ function getPlannedIds(){return Object.values(plan).filter(v=>v!=null);}
 function isPlanned(mealId){return getPlannedIds().includes(String(mealId));}
 function getMealById(id){return meals.find(m=>m.id===String(id))||null;}
 
-/* ══ FIX #6: Shared photo-picker factory (eliminates duplicate add/edit code) ══ */
-function makePhotoPicker(pickerId,inputId,previewId,onPhoto){
-  const picker=document.getElementById(pickerId);
-  const input=document.getElementById(inputId);
-  const preview=document.getElementById(previewId);
-  const removeBtn=picker.querySelector('.remove-photo-btn');
+/* ══ FIX #6: Shared photo-picker factory — with camera / gallery sheet ══ */
 
-  picker.addEventListener('click',()=>input.click());
+// Photo source sheet state
+let _sheetCameraInput=null, _sheetGalleryInput=null;
+const _backdrop=document.getElementById('photo-sheet-backdrop');
+const _sheet=document.getElementById('photo-sheet');
+
+function _openPhotoSheet(cameraInputEl, galleryInputEl){
+  _sheetCameraInput=cameraInputEl;
+  _sheetGalleryInput=galleryInputEl;
+  _backdrop.classList.add('open');
+  _sheet.classList.add('open');
+}
+function _closePhotoSheet(){
+  _backdrop.classList.remove('open');
+  _sheet.classList.remove('open');
+  _sheetCameraInput=null;
+  _sheetGalleryInput=null;
+}
+
+_backdrop.addEventListener('click',_closePhotoSheet);
+document.getElementById('photo-sheet-cancel').addEventListener('click',_closePhotoSheet);
+document.getElementById('photo-sheet-camera').addEventListener('click',()=>{
+  const el=_sheetCameraInput; _closePhotoSheet(); if(el) el.click();
+});
+document.getElementById('photo-sheet-gallery').addEventListener('click',()=>{
+  const el=_sheetGalleryInput; _closePhotoSheet(); if(el) el.click();
+});
+
+function _wireInput(input, preview, picker, onPhoto){
   input.addEventListener('change',e=>{
     const f=e.target.files[0];if(!f)return;
     const r=new FileReader();
@@ -519,10 +555,22 @@ function makePhotoPicker(pickerId,inputId,previewId,onPhoto){
     };
     r.readAsDataURL(f);
   });
+}
+
+function makePhotoPicker(pickerId,inputId,previewId,onPhoto){
+  const picker=document.getElementById(pickerId);
+  const galleryInput=document.getElementById(inputId);
+  const cameraInput=document.getElementById(inputId.replace('-input','-camera-input'));
+  const preview=document.getElementById(previewId);
+  const removeBtn=picker.querySelector('.remove-photo-btn');
+
+  picker.addEventListener('click',()=>_openPhotoSheet(cameraInput, galleryInput));
+  _wireInput(galleryInput, preview, picker, onPhoto);
+  if(cameraInput) _wireInput(cameraInput, preview, picker, onPhoto);
   removeBtn.addEventListener('click',e=>{
     e.stopPropagation();
     preview.style.display='none';picker.classList.remove('has-photo');
-    input.value='';onPhoto(null);
+    galleryInput.value='';if(cameraInput)cameraInput.value='';onPhoto(null);
   });
 }
 
@@ -1035,5 +1083,20 @@ renderCards();
   <div style="flex:1;font-size:14px;color:rgba(255,255,255,0.85);">A new version is available</div>
   <button id="update-btn" style="background:rgba(60,220,100,0.2);border:0.5px solid rgba(60,220,100,0.35);color:rgba(60,220,100,0.95);font-size:13px;font-weight:600;font-family:inherit;padding:7px 14px;border-radius:16px;cursor:pointer;">Reload</button>
 </div>
+<!-- ── Photo source sheet ── -->
+<div class="photo-sheet-backdrop" id="photo-sheet-backdrop"></div>
+<div class="photo-sheet" id="photo-sheet">
+  <div class="photo-sheet-title">Add Photo</div>
+  <button class="photo-sheet-btn" id="photo-sheet-camera">
+    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    Camera
+  </button>
+  <button class="photo-sheet-btn" id="photo-sheet-gallery">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Photo Library
+  </button>
+  <button class="photo-sheet-cancel" id="photo-sheet-cancel">Cancel</button>
+</div>
+
 </body>
 </html>
