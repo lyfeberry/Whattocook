@@ -100,8 +100,8 @@ canvas { position:fixed; inset:0; z-index:1; }
 .meal-card.shaking { animation:shake 0.4s ease infinite; overflow:visible; }
 .meal-card.slide-in-right { animation:slideInRight 0.35s cubic-bezier(0.34,1.2,0.64,1) both; }
 .meal-card.slide-in-left  { animation:slideInLeft  0.35s cubic-bezier(0.34,1.2,0.64,1) both; }
-.meal-card .card-photo { width:calc(100% - 20px); height:200px; object-fit:cover; display:block; margin:10px auto 0; border-radius:12px; }
-.meal-card .card-photo-placeholder { width:calc(100% - 20px); height:150px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; margin:10px auto 0; border-radius:12px; }
+.meal-card .card-photo { width:calc(100% - 20px); aspect-ratio:1/1; object-fit:cover; display:block; margin:10px auto 0; border-radius:12px; }
+.meal-card .card-photo-placeholder { width:calc(100% - 20px); aspect-ratio:1/1; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; margin:10px auto 0; border-radius:12px; }
 .meal-card .card-photo-placeholder svg { width:28px; height:28px; stroke:rgba(255,255,255,0.16); fill:none; }
 .meal-card .card-body { padding:14px 14px 16px; }
 .meal-card .card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
@@ -112,6 +112,23 @@ canvas { position:fixed; inset:0; z-index:1; }
 .card-pick-btn.planned svg { stroke:#fff; }
 .meal-card .card-ingredients { font-size:13px; color:rgba(255,255,255,0.44); line-height:1.5; margin-bottom:4px; }
 .meal-card .card-notes { font-size:13px; color:rgba(255,255,255,0.5); font-style:italic; line-height:1.5; border-top:0.5px solid rgba(255,255,255,0.08); padding-top:8px; margin-top:6px; }
+
+/* CHEAT DAY BADGE */
+.cheat-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(255,80,120,0.18); border:0.5px solid rgba(255,80,120,0.35); color:rgba(255,120,160,0.95); font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; letter-spacing:0.2px; margin-bottom:6px; }
+.cheat-badge svg { width:10px; height:10px; stroke:currentColor; fill:none; stroke-width:2.2; }
+
+/* CATEGORY TOGGLE (Add/Edit sheet) */
+.cat-toggle { display:flex; gap:8px; width:100%; margin-bottom:18px; }
+.cat-btn { flex:1; padding:11px; border-radius:12px; border:0.5px solid rgba(255,255,255,0.1); cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.45); transition:all 0.2s; }
+.cat-btn.active { background:rgba(255,80,120,0.18); border-color:rgba(255,80,120,0.35); color:rgba(255,120,160,0.95); }
+.cat-btn.active-normal { background:rgba(0,180,255,0.15); border-color:rgba(0,200,255,0.3); color:rgba(0,200,255,0.9); }
+
+/* HOME TAB BAR */
+.home-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.home-tab { flex:1; padding:11px; border-radius:12px; border:none; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; transition:background 0.2s,color 0.2s; }
+.home-tab { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); box-shadow:0 0 0 0.5px rgba(255,255,255,0.1) inset; }
+.home-tab.active { background:rgba(255,255,255,0.18); color:rgba(255,255,255,0.95); box-shadow:0 0 0 0.5px rgba(255,255,255,0.25) inset; }
+.home-tab.cheat-active { background:rgba(255,80,120,0.2); color:rgba(255,120,160,0.95); box-shadow:0 0 0 0.5px rgba(255,80,120,0.3) inset; }
 
 /* CARD ACTION BAR (shake) */
 .card-action-bar { position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between; z-index:5; opacity:0; pointer-events:none; transition:opacity 0.2s; }
@@ -353,6 +370,12 @@ canvas { position:fixed; inset:0; z-index:1; }
       <div class="step-nav"><button class="step-btn step-btn-back" id="s2back">← Back</button><button class="step-btn step-btn-next" id="s2next">Next →</button></div>
     </div>
     <div class="step-wrap" id="step-3">
+      <div class="field" style="width:100%"><label>Category</label>
+        <div class="cat-toggle">
+          <button class="cat-btn active-normal" id="cat-normal" type="button">🍽️ Regular Meal</button>
+          <button class="cat-btn" id="cat-cheat" type="button">🍕 Cheat Day</button>
+        </div>
+      </div>
       <div class="field" style="width:100%"><label>My Notes</label><textarea id="input-notes" placeholder="Tips, variations…"></textarea></div>
       <div class="step-nav"><button class="step-btn step-btn-back" id="s3back">← Back</button><button class="step-btn step-btn-save" id="s3save">Save Meal ✓</button></div>
     </div>
@@ -374,6 +397,12 @@ canvas { position:fixed; inset:0; z-index:1; }
     <input type="file" id="edit-photo-camera-input" accept="image/*" capture="environment">
     <div class="field"><label>Meal Name</label><input type="text" id="edit-name"></div>
     <div class="field"><label>Ingredients</label><textarea id="edit-ingredients"></textarea></div>
+    <div class="field"><label>Category</label>
+      <div class="cat-toggle">
+        <button class="cat-btn active-normal" id="edit-cat-normal" type="button">🍽️ Regular Meal</button>
+        <button class="cat-btn" id="edit-cat-cheat" type="button">🍕 Cheat Day</button>
+      </div>
+    </div>
     <div class="field"><label>My Notes</label><textarea id="edit-notes"></textarea></div>
   </div>
 </div>
@@ -481,12 +510,12 @@ function makeId(){
 function compressPhoto(dataUrl,cb){
   const img=new Image();
   img.onload=()=>{
-    const MAX=800;
+    const MAX=1400;
     let w=img.width,h=img.height;
     if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
     const cv=document.createElement('canvas');cv.width=w;cv.height=h;
     cv.getContext('2d').drawImage(img,0,0,w,h);
-    cb(cv.toDataURL('image/jpeg',0.75));
+    cb(cv.toDataURL('image/jpeg',0.88));
   };
   img.src=dataUrl;
 }
@@ -514,9 +543,11 @@ Object.keys(plan).forEach(k=>{if(plan[k]&&!meals.find(m=>m.id===plan[k]))plan[k]
 let removedIngredients=JSON.parse(localStorage.getItem('wtc-ri')||'[]');
 let checkedIngredients=JSON.parse(localStorage.getItem('wtc-ci')||'[]');
 let viewMode='home';
+let homeTab=localStorage.getItem('wtc-home-tab')||'meals'; // 'meals' or 'cheat'
 let plannerTab=localStorage.getItem('wtc-tab')||'plan';
 let currentSkin=localStorage.getItem('wtc-skin')||'ocean';
 let currentPhoto=null,editPhoto=null,editIdx=-1,searchQuery='',sy=0;
+let currentCategory='normal'; // 'normal' or 'cheat' — used during add flow
 
 function saveMeals(){safeSave('wtc-meals',JSON.stringify(meals));}
 function savePlan(){safeSave('wtc-plan',JSON.stringify(plan));}
@@ -609,23 +640,41 @@ function renderCards(slideDir=null){
     planGrid.style.display='flex';
     label.textContent='Meal Planner';
     empty.style.display='none';
+    const tb=document.getElementById('home-tab-bar');if(tb)tb.style.display='none';
     renderPlanner();
     return;
   }
 
   grid.style.display='flex';
   planGrid.style.display='none';
-  label.textContent='My Meals';
 
   const plannedIds=getPlannedIds();
-  let list=meals.filter(m=>!plannedIds.includes(m.id));
+  const isCheat=homeTab==='cheat';
+  label.textContent=isCheat?'Cheat Days':'My Meals';
+
+  // Build or update the home tab bar
+  let tabBar=document.getElementById('home-tab-bar');
+  if(!tabBar){
+    tabBar=document.createElement('div');
+    tabBar.id='home-tab-bar';
+    tabBar.className='home-tabs';
+    tabBar.innerHTML=`<button id="ht-meals" class="home-tab">🍽️ Meals</button><button id="ht-cheat" class="home-tab">🍕 Cheat Days</button>`;
+    grid.parentNode.insertBefore(tabBar,grid);
+    tabBar.querySelector('#ht-meals').onclick=()=>{homeTab='meals';safeSave('wtc-home-tab','meals');_lastRenderedKey='';renderCards();};
+    tabBar.querySelector('#ht-cheat').onclick=()=>{homeTab='cheat';safeSave('wtc-home-tab','cheat');_lastRenderedKey='';renderCards();};
+  }
+  tabBar.style.display='flex';
+  tabBar.querySelector('#ht-meals').className='home-tab'+(homeTab==='meals'?' active':'');
+  tabBar.querySelector('#ht-cheat').className='home-tab'+(homeTab==='cheat'?' cheat-active':'');
+
+  let list=meals.filter(m=>!plannedIds.includes(m.id) && (isCheat ? m.category==='cheat' : m.category!=='cheat'));
   if(searchQuery){const q=searchQuery.toLowerCase();list=list.filter(m=>(m.name||'').toLowerCase().includes(q)||(m.ingredients||'').toLowerCase().includes(q));}
 
-  document.getElementById('empty-text').innerHTML=searchQuery?'No results found':'No meals yet<br>Tap + to add one';
+  document.getElementById('empty-text').innerHTML=searchQuery?'No results found':(isCheat?'No cheat day meals yet<br>Tap + and pick 🍕 Cheat Day':'No meals yet<br>Tap + to add one');
   empty.style.display=list.length===0?'flex':'none';
 
   // FIX #4: keyed diffing — only rebuild when list actually changes
-  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)).join(',');
+  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)+'|'+(m.category||'')).join(',')+homeTab;
   if(newKey===_lastRenderedKey&&!slideDir){updateStats();return;}
   _lastRenderedKey=newKey;
 
@@ -642,6 +691,8 @@ function renderCards(slideDir=null){
       ?`<img class="card-photo" src="${meal.photo}" alt="${esc(meal.name)}">`
       :`<div class="card-photo-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
 
+    const cheatBadge=meal.category==='cheat'?`<div class="cheat-badge"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Cheat Day</div>`:'';
+
     card.innerHTML=`
       ${photoHTML}
       <div class="card-action-bar">
@@ -649,6 +700,7 @@ function renderCards(slideDir=null){
         <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
       </div>
       <div class="card-body">
+        ${cheatBadge}
         <div class="card-top">
           <div class="card-name">${esc(meal.name)||'Untitled'}</div>
           <button class="card-pick-btn${planned?' planned':''}" data-id="${meal.id}">
@@ -907,13 +959,16 @@ function goStep(n,back=false){
   document.getElementById('step-skip').style.display=(step===0||step===2||step===3)?'block':'none';
 }
 function openAddSheet(){
-  step=0;currentPhoto=null;
+  step=0;currentPhoto=null;currentCategory='normal';
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('photo-picker').classList.remove('has-photo');
   document.getElementById('photo-input').value='';
   document.getElementById('input-name').value='';
   document.getElementById('input-ingredients').value='';
   document.getElementById('input-notes').value='';
+  // Reset category buttons
+  document.getElementById('cat-normal').className='cat-btn active-normal';
+  document.getElementById('cat-cheat').className='cat-btn';
   for(let i=0;i<4;i++){const e=document.getElementById(`step-${i}`);e.classList.remove('active','back');}
   document.getElementById('step-0').classList.add('active');
   document.getElementById('step-title').textContent=stepTitles[0];
@@ -934,11 +989,33 @@ document.getElementById('s2back').addEventListener('click',()=>goStep(1,true));
 document.getElementById('s2next').addEventListener('click',()=>goStep(3));
 document.getElementById('s3back').addEventListener('click',()=>goStep(2,true));
 document.getElementById('s3save').addEventListener('click',doSaveMeal);
+
+// Category toggle — Add sheet
+document.getElementById('cat-normal').addEventListener('click',()=>{
+  currentCategory='normal';
+  document.getElementById('cat-normal').className='cat-btn active-normal';
+  document.getElementById('cat-cheat').className='cat-btn';
+});
+document.getElementById('cat-cheat').addEventListener('click',()=>{
+  currentCategory='cheat';
+  document.getElementById('cat-cheat').className='cat-btn active';
+  document.getElementById('cat-normal').className='cat-btn';
+});
+
+// Category toggle — Edit sheet
+document.getElementById('edit-cat-normal').addEventListener('click',()=>{
+  document.getElementById('edit-cat-normal').className='cat-btn active-normal';
+  document.getElementById('edit-cat-cheat').className='cat-btn';
+});
+document.getElementById('edit-cat-cheat').addEventListener('click',()=>{
+  document.getElementById('edit-cat-cheat').className='cat-btn active';
+  document.getElementById('edit-cat-normal').className='cat-btn';
+});
 function doSaveMeal(){
   const name=document.getElementById('input-name').value.trim();
   if(!name){goStep(1,false);setTimeout(()=>document.getElementById('input-name').focus(),350);showToast('Please enter a meal name');return;}
   // FIX #9: safe ID that won't collide on rapid inserts
-  meals.unshift({id:makeId(),name,ingredients:document.getElementById('input-ingredients').value.trim(),notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto});
+  meals.unshift({id:makeId(),name,ingredients:document.getElementById('input-ingredients').value.trim(),notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto,category:currentCategory});
   saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();showToast('Meal saved ✓');
 }
 
@@ -948,6 +1025,10 @@ function openEditSheet(idx){
   document.getElementById('edit-name').value=meal.name||'';
   document.getElementById('edit-ingredients').value=meal.ingredients||'';
   document.getElementById('edit-notes').value=meal.notes||'';
+  // Set category buttons
+  const isCheatMeal=meal.category==='cheat';
+  document.getElementById('edit-cat-normal').className='cat-btn'+(isCheatMeal?'':' active-normal');
+  document.getElementById('edit-cat-cheat').className='cat-btn'+(isCheatMeal?' active':'');
   const p=document.getElementById('edit-photo-preview');
   if(editPhoto){p.src=editPhoto;p.style.display='block';document.getElementById('edit-photo-picker').classList.add('has-photo');}
   else{p.style.display='none';document.getElementById('edit-photo-picker').classList.remove('has-photo');}
@@ -960,7 +1041,8 @@ document.getElementById('edit-sheet').addEventListener('touchstart',e=>{sy=e.tou
 document.getElementById('edit-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeEditSheet();},{passive:true});
 document.getElementById('edit-save').addEventListener('click',()=>{
   const name=document.getElementById('edit-name').value.trim();if(!name){document.getElementById('edit-name').focus();return;}
-  meals[editIdx].name=name;meals[editIdx].ingredients=document.getElementById('edit-ingredients').value.trim();meals[editIdx].notes=document.getElementById('edit-notes').value.trim();meals[editIdx].photo=editPhoto;
+  const editIsCheat=document.getElementById('edit-cat-cheat').classList.contains('active');
+  meals[editIdx].name=name;meals[editIdx].ingredients=document.getElementById('edit-ingredients').value.trim();meals[editIdx].notes=document.getElementById('edit-notes').value.trim();meals[editIdx].photo=editPhoto;meals[editIdx].category=editIsCheat?'cheat':'normal';
   saveMeals();closeEditSheet();_lastRenderedKey='';renderCards();showToast('Meal updated ✓');
 });
 
@@ -1079,6 +1161,7 @@ if ('serviceWorker' in navigator) {
 /* ══ INIT ══ */
 applySkin(currentSkin);
 savePlan();
+viewMode='home'; // ensure home view on launch
 renderCards();
 </script>
 
