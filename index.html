@@ -304,7 +304,10 @@ canvas { position:fixed; inset:0; z-index:1; }
 <div class="vignette"></div><div class="noise"></div>
 
 <div class="top-bar">
-  <div class="top-bar-left"><span class="view-label" id="view-label">My Meals</span></div>
+  <div class="top-bar-left" style="display:flex;align-items:center;gap:10px;">
+    <button class="icon-btn cheat-toggle-btn" id="btn-cheat-toggle" title="Cheat Days" style="background:rgba(220,80,100,0.22);box-shadow:0 0 0 0.5px rgba(255,100,120,0.35) inset,0 2px 10px rgba(0,0,0,0.3);">🍕</button>
+    <span class="view-label" id="view-label">My Meals</span>
+  </div>
   <div class="top-bar-right">
     <button class="icon-btn" id="search-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></button>
     <button class="icon-btn" id="settings-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -640,7 +643,6 @@ function renderCards(slideDir=null){
     planGrid.style.display='flex';
     label.textContent='Meal Planner';
     empty.style.display='none';
-    const tb=document.getElementById('home-tab-bar');if(tb)tb.style.display='none';
     renderPlanner();
     return;
   }
@@ -652,20 +654,15 @@ function renderCards(slideDir=null){
   const isCheat=homeTab==='cheat';
   label.textContent=isCheat?'Cheat Days':'My Meals';
 
-  // Build or update the home tab bar
-  let tabBar=document.getElementById('home-tab-bar');
-  if(!tabBar){
-    tabBar=document.createElement('div');
-    tabBar.id='home-tab-bar';
-    tabBar.className='home-tabs';
-    tabBar.innerHTML=`<button id="ht-meals" class="home-tab">🍽️ Meals</button><button id="ht-cheat" class="home-tab">🍕 Cheat Days</button>`;
-    grid.parentNode.insertBefore(tabBar,grid);
-    tabBar.querySelector('#ht-meals').onclick=()=>{homeTab='meals';safeSave('wtc-home-tab','meals');_lastRenderedKey='';renderCards();};
-    tabBar.querySelector('#ht-cheat').onclick=()=>{homeTab='cheat';safeSave('wtc-home-tab','cheat');_lastRenderedKey='';renderCards();};
+  // Update the cheat toggle button appearance
+  const cheatBtn=document.getElementById('btn-cheat-toggle');
+  if(isCheat){
+    cheatBtn.style.background='rgba(220,80,100,0.55)';
+    cheatBtn.style.boxShadow='0 0 0 0.5px rgba(255,100,120,0.7) inset,0 2px 10px rgba(0,0,0,0.3)';
+  } else {
+    cheatBtn.style.background='rgba(220,80,100,0.22)';
+    cheatBtn.style.boxShadow='0 0 0 0.5px rgba(255,100,120,0.35) inset,0 2px 10px rgba(0,0,0,0.3)';
   }
-  tabBar.style.display='flex';
-  tabBar.querySelector('#ht-meals').className='home-tab'+(homeTab==='meals'?' active':'');
-  tabBar.querySelector('#ht-cheat').className='home-tab'+(homeTab==='cheat'?' cheat-active':'');
 
   let list=meals.filter(m=>!plannedIds.includes(m.id) && (isCheat ? m.category==='cheat' : m.category!=='cheat'));
   if(searchQuery){const q=searchQuery.toLowerCase();list=list.filter(m=>(m.name||'').toLowerCase().includes(q)||(m.ingredients||'').toLowerCase().includes(q));}
@@ -933,9 +930,16 @@ document.getElementById('daypick-sheet').addEventListener('touchstart',e=>{sy=e.
 document.getElementById('daypick-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeDayPicker();},{passive:true});
 
 /* ══ NAV ══ */
+document.getElementById('btn-cheat-toggle').addEventListener('click',()=>{
+  homeTab=homeTab==='cheat'?'meals':'cheat';
+  safeSave('wtc-home-tab',homeTab);
+  _lastRenderedKey='';
+  if(viewMode!=='home'){viewMode='home';document.getElementById('btn-home').classList.add('nav-active');document.getElementById('btn-planner').classList.remove('nav-active','planner-active');}
+  renderCards();
+});
 document.getElementById('btn-home').addEventListener('click',()=>{
-  if(viewMode==='home'){shuffleArray(meals);saveMeals();_lastRenderedKey='';renderCards();}
-  else{viewMode='home';document.getElementById('btn-home').classList.add('nav-active');document.getElementById('btn-planner').classList.remove('nav-active','planner-active');renderCards('left');document.getElementById('main').scrollTo({top:0,behavior:'smooth'});}
+  if(viewMode==='home'&&homeTab==='meals'){shuffleArray(meals);saveMeals();_lastRenderedKey='';renderCards();}
+  else{viewMode='home';homeTab='meals';safeSave('wtc-home-tab','meals');document.getElementById('btn-home').classList.add('nav-active');document.getElementById('btn-planner').classList.remove('nav-active','planner-active');_lastRenderedKey='';renderCards('left');document.getElementById('main').scrollTo({top:0,behavior:'smooth'});}
 });
 document.getElementById('btn-planner').addEventListener('click',()=>{
   viewMode='planner';document.getElementById('btn-planner').classList.add('nav-active','planner-active');document.getElementById('btn-home').classList.remove('nav-active');renderCards('right');document.getElementById('main').scrollTo({top:0,behavior:'smooth'});
