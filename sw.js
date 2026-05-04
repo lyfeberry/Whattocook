@@ -1,6 +1,6 @@
 // WTC Service Worker — network-first for shell, cache-first for assets
 // Bump CACHE version any time you deploy new files.
-const CACHE = 'wtc-v6';
+const CACHE = 'wtc-v7';
 
 // These files are fetched network-first so updates are always picked up
 const NETWORK_FIRST = [
@@ -31,16 +31,16 @@ const CACHE_FIRST_FILES = [
 
 const ALL_FILES = [...NETWORK_FIRST, ...CACHE_FIRST_FILES];
 
-// Install: pre-cache everything, activate immediately
+// Install: pre-cache everything.
+// Do NOT skipWaiting here — let the page control when to switch via the banner.
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(ALL_FILES))
-      .then(() => self.skipWaiting())   // don't wait — take control immediately
+    caches.open(CACHE).then(c => c.addAll(ALL_FILES))
   );
 });
 
-// Activate: delete old caches, claim all clients, then tell them to reload
+// Activate: delete old caches and claim clients.
+// Do NOT navigate clients here — the page shows the update banner instead.
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -48,12 +48,6 @@ self.addEventListener('activate', e => {
         keys.filter(k => k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
-      .then(() => {
-        // Tell every open tab/window to reload so they get the new version
-        return self.clients.matchAll({ type: 'window' }).then(clients => {
-          clients.forEach(client => client.navigate(client.url));
-        });
-      })
   );
 });
 
