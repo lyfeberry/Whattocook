@@ -569,7 +569,7 @@ let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
 
 /* ══ FIX #7: Plan depth is a single constant ══ */
 const PLAN_DAYS=5;
-const APP_VERSION='2.1';
+const APP_VERSION='2.4';
 // Plan keys 1-7 = tomorrow through next 7 days
 const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i+1),null]));
 let plan=JSON.parse(localStorage.getItem('wtc-plan')||JSON.stringify(_defaultPlan));
@@ -582,6 +582,7 @@ Object.keys(plan).forEach(k=>{if(plan[k]&&!meals.find(m=>m.id===plan[k]))plan[k]
 
 let customShopItems=JSON.parse(localStorage.getItem('wtc-custom-shop')||'[]');
 function saveCustomShop(){safeSave('wtc-custom-shop',JSON.stringify(customShopItems));}
+let removedIngredients=JSON.parse(localStorage.getItem('wtc-ri')||'[]');
 let checkedIngredients=JSON.parse(localStorage.getItem('wtc-ci')||'[]');
 let viewMode='home';
 let homeTab=localStorage.getItem('wtc-home-tab')||'meals'; // 'meals' or 'cheat'
@@ -887,117 +888,135 @@ document.addEventListener('click',handleSlotClick);
 function renderShoppingList(grid){
   const plannedMeals=Array.from({length:PLAN_DAYS},(_,i)=>{const id=plan[String(i+1)];return id?getMealById(id):null;}).filter(Boolean);
 
-  // Custom add input - use data attribute to survive focus loss on Android
+  // ── Add item row ──
   const addRow=document.createElement('div');
   addRow.className='shop-add-row';
-  addRow.innerHTML=`<input class="shop-add-input" id="shop-custom-input" placeholder="Add item manually…" autocomplete="off"><button class="shop-add-btn" id="shop-custom-add">Add</button>`;
+  const shopInp=document.createElement('input');
+  shopInp.className='shop-add-input';
+  shopInp.placeholder='Add item manually…';
+  shopInp.autocomplete='off';
+  shopInp.type='text';
+  const shopBtn=document.createElement('button');
+  shopBtn.className='shop-add-btn';
+  shopBtn.textContent='Add';
+  addRow.appendChild(shopInp);
+  addRow.appendChild(shopBtn);
   grid.appendChild(addRow);
 
-  let shopInputVal='';
-  const shopInp=addRow.querySelector('#shop-custom-input');
-  const shopBtn=addRow.querySelector('#shop-custom-add');
+  // ── Item list container (updated without full re-render) ──
+  const listContainer=document.createElement('div');
+  listContainer.id='shop-list-container';
+  grid.appendChild(listContainer);
 
-  shopInp.addEventListener('input',()=>{ shopInputVal=shopInp.value; });
-  shopInp.addEventListener('change',()=>{ shopInputVal=shopInp.value; });
+  function renderItems(){
+    listContainer.innerHTML='';
+    const allItems=[],seen=new Set();
+    plannedMeals.forEach(meal=>{
+      if(!meal.ingredients)return;
+      meal.ingredients.split(/[,\n]+/).map(s=>s.trim()).filter(Boolean).forEach(ing=>{
+        const key=ing.toLowerCase();
+        if(!seen.has(key)){seen.add(key);allItems.push({text:ing,key,custom:false});}
+      });
+    });
+    customShopItems.forEach(ci=>allItems.push({text:ci.text,key:ci.key,custom:true}));
+    const visible=allItems.filter(i=>!removedIngredients.includes(i.key));
 
-  const addCustom=()=>{
-    const val=(shopInputVal||shopInp.value||'').trim();
+    if(allItems.length===0){
+      listContainer.innerHTML=`<div class="shop-empty-msg">Type an item above and tap Add</div>`;
+      return;
+    }
+    if(visible.length===0){
+      listContainer.innerHTML=`<div class="shop-empty-msg">All items removed</div>`;
+      return;
+    }
+
+    // Split into unchecked and checked
+    const unchecked=visible.filter(i=>!checkedIngredients.includes(i.key));
+    const checked=visible.filter(i=>checkedIngredients.includes(i.key));
+
+    function makeRow(item){
+      const isTicked=checkedIngredients.includes(item.key);
+      const row=document.createElement('div');
+      row.className='shop-item'+(isTicked?' checked':'');
+      row.style.cursor='pointer';
+      row.innerHTML=`
+        <div class="shop-check">${isTicked?'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+        <div class="shop-item-text">${esc(item.text)}</div>
+        <button class="shop-remove-btn"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      // Whole row toggles tick
+      row.addEventListener('click',e=>{
+        if(e.target.closest('.shop-remove-btn'))return;
+        const ci=checkedIngredients.indexOf(item.key);
+        if(ci>-1)checkedIngredients.splice(ci,1);else checkedIngredients.push(item.key);
+        saveCI();renderItems();
+      });
+      row.querySelector('.shop-remove-btn').addEventListener('click',e=>{
+        e.stopPropagation();
+        if(item.custom){customShopItems=customShopItems.filter(c=>c.key!==item.key);saveCustomShop();}
+        else{if(!removedIngredients.includes(item.key))removedIngredients.push(item.key);const ci=checkedIngredients.indexOf(item.key);if(ci>-1)checkedIngredients.splice(ci,1);saveRI();saveCI();}
+        renderItems();
+      });
+      return row;
+    }
+
+    const sec=document.createElement('div');
+    // Count label
+    sec.innerHTML=`<div class="shop-section-title">${unchecked.length} item${unchecked.length!==1?'s':''} to get</div>`;
+    unchecked.forEach(item=>sec.appendChild(makeRow(item)));
+
+    // Ticked section below divider
+    if(checked.length>0){
+      const divider=document.createElement('div');
+      divider.style.cssText='border-top:1px solid var(--border);margin:14px 0 10px;';
+      sec.appendChild(divider);
+      const tickedLabel=document.createElement('div');
+      tickedLabel.className='shop-section-title';
+      tickedLabel.textContent=`${checked.length} ticked`;
+      sec.appendChild(tickedLabel);
+      checked.forEach(item=>sec.appendChild(makeRow(item)));
+
+      // Clear ticked — plain style, no red
+      const cb=document.createElement('button');
+      cb.style.cssText='width:100%;padding:13px;border-radius:14px;border:1px solid var(--border);background:#f2f2f7;color:#6e6e73;font-size:14px;font-weight:600;font-family:inherit;margin-top:10px;cursor:pointer;';
+      cb.textContent='Remove ticked';
+      cb.onclick=()=>{
+        checked.forEach(item=>{
+          if(item.custom){customShopItems=customShopItems.filter(c=>c.key!==item.key);saveCustomShop();}
+          else{if(!removedIngredients.includes(item.key))removedIngredients.push(item.key);saveRI();}
+          const ci=checkedIngredients.indexOf(item.key);if(ci>-1)checkedIngredients.splice(ci,1);saveCI();
+        });
+        renderItems();
+      };
+      sec.appendChild(cb);
+    }
+
+    listContainer.appendChild(sec);
+  }
+
+  // Add item — purely DOM, no renderPlanner call
+  shopBtn.addEventListener('mousedown',e=>e.preventDefault());
+  shopBtn.addEventListener('click',()=>{
+    const val=shopInp.value.trim();
     if(!val)return;
-    shopInputVal='';
     shopInp.value='';
     customShopItems.push({text:val,key:'custom_'+Date.now()});
     saveCustomShop();
-    renderPlanner();
-  };
-
-  shopBtn.addEventListener('mousedown',e=>{ e.preventDefault(); shopInputVal=shopInp.value; });
-  shopBtn.addEventListener('click',addCustom);
-  shopInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCustom();}});
-
-  if(plannedMeals.length===0&&customShopItems.length===0){
-    const d=document.createElement('div');
-    d.className='shop-empty-msg';
-    d.innerHTML='Add items above or plan meals<br>to auto-populate ingredients';
-    grid.appendChild(d);
-    return;
-  }
-
-  if(plannedMeals.length===0&&customShopItems.length>0){
-    // Only custom items — skip meal ingredients section, go straight to list
-  }
-
-  const allItems=[],seen=new Set();
-  plannedMeals.forEach(meal=>{
-    if(!meal.ingredients)return;
-    meal.ingredients.split(/[,\n]+/).map(s=>s.trim()).filter(Boolean).forEach(ing=>{
-      const key=ing.toLowerCase();
-      if(!seen.has(key)){seen.add(key);allItems.push({text:ing,key,custom:false});}
-    });
+    renderItems();
+    shopInp.focus();
   });
-  // Add custom items
-  customShopItems.forEach(ci=>allItems.push({text:ci.text,key:ci.key,custom:true}));
-
-  const visible=allItems.filter(i=>!removedIngredients.includes(i.key));
-
-  if(visible.length===0&&allItems.length>0){
-    const d=document.createElement('div');d.className='shop-empty-msg';d.textContent='All ingredients removed';grid.appendChild(d);
-    const rb=document.createElement('button');rb.className='shop-action-btn';rb.textContent='Restore all';
-    rb.onclick=()=>{removedIngredients.splice(0,removedIngredients.length);saveRI();renderPlanner();};
-    grid.appendChild(rb);return;
-  }
-
-  if(visible.length===0){
-    const d=document.createElement('div');d.className='shop-empty-msg';d.textContent='No ingredients found — add ingredients to your meals';grid.appendChild(d);return;
-  }
-
-  const sec=document.createElement('div');
-  sec.innerHTML=`<div class="shop-section-title">${visible.length} ingredient${visible.length!==1?'s':''}</div>`;
-
-  visible.forEach(item=>{
-    const checked=checkedIngredients.includes(item.key);
-    const row=document.createElement('div');
-    row.className='shop-item'+(checked?' checked':'');
-
-    const tickSvg=checked?'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':'';
-    row.innerHTML=`
-      <div class="shop-check">${tickSvg}</div>
-      <div class="shop-item-text">${esc(item.text)}</div>
-      <button class="shop-remove-btn" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
-
-    row.querySelector('.shop-check').addEventListener('click',e=>{
-      e.stopPropagation();
-      const ci=checkedIngredients.indexOf(item.key);
-      if(ci>-1)checkedIngredients.splice(ci,1);else checkedIngredients.push(item.key);
-      saveCI();renderPlanner();
-    });
-
-    row.querySelector('.shop-remove-btn').addEventListener('click',e=>{
-      e.stopPropagation();
-      if(item.custom){
-        customShopItems=customShopItems.filter(ci=>ci.key!==item.key);
-        saveCustomShop();
-      } else {
-        if(!removedIngredients.includes(item.key))removedIngredients.push(item.key);
-        const ci=checkedIngredients.indexOf(item.key);if(ci>-1)checkedIngredients.splice(ci,1);
-        saveRI();saveCI();
-      }
-      renderPlanner();
-    });
-
-    sec.appendChild(row);
+  shopInp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const val=shopInp.value.trim();
+      if(!val)return;
+      shopInp.value='';
+      customShopItems.push({text:val,key:'custom_'+Date.now()});
+      saveCustomShop();
+      renderItems();
+    }
   });
-  grid.appendChild(sec);
 
-  if(removedIngredients.length>0){
-    const rb=document.createElement('button');rb.className='shop-action-btn';rb.textContent=`Restore removed (${removedIngredients.length})`;
-    rb.onclick=()=>{removedIngredients.splice(0,removedIngredients.length);saveRI();renderPlanner();};
-    grid.appendChild(rb);
-  }
-  if(checkedIngredients.length>0){
-    const cb=document.createElement('button');cb.className='shop-action-btn';cb.textContent='Clear ticked';
-    cb.onclick=()=>{checkedIngredients.splice(0,checkedIngredients.length);saveCI();renderPlanner();};
-    grid.appendChild(cb);
-  }
+  renderItems();
 }
 
 /* ══ DAY PICKER ══ */
