@@ -887,22 +887,32 @@ document.addEventListener('click',handleSlotClick);
 function renderShoppingList(grid){
   const plannedMeals=Array.from({length:PLAN_DAYS},(_,i)=>{const id=plan[String(i+1)];return id?getMealById(id):null;}).filter(Boolean);
 
-  // Custom add input
+  // Custom add input - use data attribute to survive focus loss on Android
   const addRow=document.createElement('div');
   addRow.className='shop-add-row';
-  addRow.innerHTML=`<input class="shop-add-input" id="shop-custom-input" placeholder="Add item manually…"><button class="shop-add-btn" id="shop-custom-add">Add</button>`;
+  addRow.innerHTML=`<input class="shop-add-input" id="shop-custom-input" placeholder="Add item manually…" autocomplete="off"><button class="shop-add-btn" id="shop-custom-add">Add</button>`;
   grid.appendChild(addRow);
+
+  let shopInputVal='';
+  const shopInp=addRow.querySelector('#shop-custom-input');
+  const shopBtn=addRow.querySelector('#shop-custom-add');
+
+  shopInp.addEventListener('input',()=>{ shopInputVal=shopInp.value; });
+  shopInp.addEventListener('change',()=>{ shopInputVal=shopInp.value; });
+
   const addCustom=()=>{
-    const inp=document.getElementById('shop-custom-input');
-    const val=(inp.value||'').trim();
+    const val=(shopInputVal||shopInp.value||'').trim();
     if(!val)return;
-    inp.value='';
+    shopInputVal='';
+    shopInp.value='';
     customShopItems.push({text:val,key:'custom_'+Date.now()});
     saveCustomShop();
     renderPlanner();
   };
-  document.getElementById('shop-custom-add').addEventListener('click',addCustom);
-  document.getElementById('shop-custom-input').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
+
+  shopBtn.addEventListener('mousedown',e=>{ e.preventDefault(); shopInputVal=shopInp.value; });
+  shopBtn.addEventListener('click',addCustom);
+  shopInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCustom();}});
 
   if(plannedMeals.length===0&&customShopItems.length===0){
     const d=document.createElement('div');
