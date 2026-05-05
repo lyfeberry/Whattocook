@@ -568,7 +568,7 @@ function safeSave(key,value){
 let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
 
 /* ══ FIX #7: Plan depth is a single constant ══ */
-const PLAN_DAYS=7;
+const PLAN_DAYS=5;
 const APP_VERSION='2.0';
 // Plan keys 1-7 = tomorrow through next 7 days
 const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i+1),null]));
@@ -894,10 +894,12 @@ function renderShoppingList(grid){
   grid.appendChild(addRow);
   const addCustom=()=>{
     const inp=document.getElementById('shop-custom-input');
-    const val=inp.value.trim();
+    const val=(inp.value||'').trim();
     if(!val)return;
+    inp.value='';
     customShopItems.push({text:val,key:'custom_'+Date.now()});
-    saveCustomShop();inp.value='';renderPlanner();
+    saveCustomShop();
+    renderPlanner();
   };
   document.getElementById('shop-custom-add').addEventListener('click',addCustom);
   document.getElementById('shop-custom-input').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
