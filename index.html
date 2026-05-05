@@ -1051,70 +1051,21 @@ document.getElementById('url-fetch-btn').addEventListener('click',async()=>{
   status.textContent='Reading recipe page…';
 
   try{
-    // Fetch page HTML via allorigins proxy (free, no key needed)
-    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res=await fetch(proxy);
+    const worker=`https://wtc-recipe.tomas-1ba.workers.dev/?url=${encodeURIComponent(url)}`;
+    const res=await fetch(worker);
     const data=await res.json();
-    if(!data.contents) throw new Error('Could not fetch page');
 
-    const html=data.contents;
+    if(data.error) throw new Error(data.error);
+    if(!data.name) throw new Error('No recipe found');
 
-    // Parse recipe JSON-LD schema (used by BBC Food, AllRecipes, WellPlated, etc.)
-    let name='', ingredients='', imageUrl=null;
+    document.getElementById('input-name').value=data.name;
+    document.getElementById('input-ingredients').value=data.ingredients||'';
 
-    const scriptMatches=html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)||[];
-    for(const script of scriptMatches){
-      try{
-        const json=script.replace(/<script[^>]*>/i,'').replace(/<\/script>/i,'');
-        const parsed=JSON.parse(json);
-        // Handle both single object and @graph array
-        const items=parsed['@graph']?parsed['@graph']:[parsed];
-        for(const item of items){
-          if(item['@type']==='Recipe'||(Array.isArray(item['@type'])&&item['@type'].includes('Recipe'))){
-            name=(item.name||'').toUpperCase();
-            // Get ingredients — take first 8, strip quantities/measurements
-            const rawIngredients=item.recipeIngredient||[];
-            ingredients=rawIngredients
-              .slice(0,8)
-              .map(i=>i.replace(/^\d[\d\s\/\.\-]*\s*(cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|lb|g|kg|ml|l|pound|ounce|large|medium|small|clove|cloves|slice|slices|handful|pinch|bunch|can|cans|package|pkg|inch|cm)s?\b\.?\s*/i,'').replace(/\(.*?\)/g,'').trim())
-              .filter(Boolean)
-              .map(i=>i.replace(/^,\s*/,'').split(',')[0].trim())
-              .join(', ');
-            // Get image
-            const img=item.image;
-            if(img){
-              if(typeof img==='string') imageUrl=img;
-              else if(Array.isArray(img)) imageUrl=typeof img[0]==='string'?img[0]:img[0]?.url||null;
-              else if(img.url) imageUrl=img.url;
-            }
-            break;
-          }
-        }
-        if(name) break;
-      }catch(e){}
-    }
-
-    // Fallback: try Open Graph / meta tags if no schema found
-    if(!name){
-      const ogTitle=html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
-      const metaTitle=html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      name=((ogTitle&&ogTitle[1])||(metaTitle&&metaTitle[1])||'').replace(/\s*[-|].*$/,'').trim().toUpperCase();
-    }
-    if(!imageUrl){
-      const ogImg=html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-      if(ogImg) imageUrl=ogImg[1];
-    }
-
-    if(!name) throw new Error('No recipe found on this page');
-
-    document.getElementById('input-name').value=name;
-    document.getElementById('input-ingredients').value=ingredients;
-
-    // Load image
-    if(imageUrl){
+    if(data.imageUrl){
       status.textContent='Loading image…';
       try{
-        const imgProxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+        // Fetch image through worker too to avoid CORS
+        const imgProxy=`https://wtc-recipe.tomas-1ba.workers.dev/?img=${encodeURIComponent(data.imageUrl)}`;
         const imgRes=await fetch(imgProxy);
         const blob=await imgRes.blob();
         const reader=new FileReader();
