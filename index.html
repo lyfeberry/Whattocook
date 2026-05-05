@@ -76,7 +76,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .empty-state p { color:#aeaeb2; font-size:15px; font-weight:400; text-align:center; line-height:1.7; }
 
 /* MEAL CARDS — 2 column grid */
-.cards-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cards-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; width:100%; }
 @keyframes slideInRight { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
 @keyframes slideInLeft  { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
 @keyframes cardIn { from{opacity:0;transform:translateY(16px) scale(0.97)} to{opacity:1;transform:none} }
@@ -570,7 +570,7 @@ let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
 
 /* ══ FIX #7: Plan depth is a single constant ══ */
 const PLAN_DAYS=5;
-const APP_VERSION='2.5';
+const APP_VERSION='2.7';
 // Plan keys 1-7 = tomorrow through next 7 days
 const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i+1),null]));
 let plan=JSON.parse(localStorage.getItem('wtc-plan')||JSON.stringify(_defaultPlan));
@@ -1444,9 +1444,8 @@ document.getElementById('import-input').addEventListener('change',e=>{
       const parsed=JSON.parse(ev.target.result);
       const imp=Array.isArray(parsed)?parsed:(parsed.meals||[]);
       if(!Array.isArray(imp))throw 0;
-      imp.forEach(m=>{m.id=String(m.id);});
       const ids=new Set(meals.map(m=>m.id));
-      const fresh=imp.filter(m=>!ids.has(m.id));
+      const fresh=imp.filter(m=>!ids.has(m.id)).map(m=>({...m,category:m.category||'normal',id:String(m.id)}));
       meals=[...fresh,...meals];saveMeals();_lastRenderedKey='';renderCards();showToast(`Imported ${fresh.length} meal${fresh.length!==1?'s':''} ✓`);
     }catch{showToast('Invalid file');}
     e.target.value='';
