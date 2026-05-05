@@ -1051,45 +1051,82 @@ document.getElementById('url-fetch-btn').addEventListener('click',async()=>{
   status.textContent='Reading recipe page…';
 
   try{
-    // Microlink - free, no API key, extracts title + image + description from any URL
-    const api=`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=false`;
-    const res=await fetch(api);
+    // Fetch page HTML via allorigins proxy (free, no key needed)
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res=await fetch(proxy);
     const data=await res.json();
+    if(!data.contents) throw new Error('Could not fetch page');
 
-    if(data.status!=='success') throw new Error('Could not read page');
+    const html=data.contents;
 
-    const d=data.data;
-    const name=(d.title||'').toUpperCase().replace(/\s*[-|].*$/,'').trim(); // strip site name after dash/pipe
-    const description=d.description||'';
-    const imageUrl=d.image?.url||d.logo?.url||null;
+    // Parse recipe JSON-LD schema (used by BBC Food, AllRecipes, WellPlated, etc.)
+    let name='', ingredients='', imageUrl=null;
 
-    if(!name) throw new Error('No title found');
+    const scriptMatches=html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)||[];
+    for(const script of scriptMatches){
+      try{
+        const json=script.replace(/<script[^>]*>/i,'').replace(/<\/script>/i,'');
+        const parsed=JSON.parse(json);
+        // Handle both single object and @graph array
+        const items=parsed['@graph']?parsed['@graph']:[parsed];
+        for(const item of items){
+          if(item['@type']==='Recipe'||(Array.isArray(item['@type'])&&item['@type'].includes('Recipe'))){
+            name=(item.name||'').toUpperCase();
+            // Get ingredients — take first 8, strip quantities/measurements
+            const rawIngredients=item.recipeIngredient||[];
+            ingredients=rawIngredients
+              .slice(0,8)
+              .map(i=>i.replace(/^\d[\d\s\/\.\-]*\s*(cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|lb|g|kg|ml|l|pound|ounce|large|medium|small|clove|cloves|slice|slices|handful|pinch|bunch|can|cans|package|pkg|inch|cm)s?\b\.?\s*/i,'').replace(/\(.*?\)/g,'').trim())
+              .filter(Boolean)
+              .map(i=>i.replace(/^,\s*/,'').split(',')[0].trim())
+              .join(', ');
+            // Get image
+            const img=item.image;
+            if(img){
+              if(typeof img==='string') imageUrl=img;
+              else if(Array.isArray(img)) imageUrl=typeof img[0]==='string'?img[0]:img[0]?.url||null;
+              else if(img.url) imageUrl=img.url;
+            }
+            break;
+          }
+        }
+        if(name) break;
+      }catch(e){}
+    }
 
-    // Extract rough ingredients from description — just use description as notes hint
+    // Fallback: try Open Graph / meta tags if no schema found
+    if(!name){
+      const ogTitle=html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+      const metaTitle=html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      name=((ogTitle&&ogTitle[1])||(metaTitle&&metaTitle[1])||'').replace(/\s*[-|].*$/,'').trim().toUpperCase();
+    }
+    if(!imageUrl){
+      const ogImg=html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+      if(ogImg) imageUrl=ogImg[1];
+    }
+
+    if(!name) throw new Error('No recipe found on this page');
+
     document.getElementById('input-name').value=name;
-    // Try to parse ingredients from description (keywords before commas)
-    const ingredients=description.length>10?description.replace(/\.$/, '').substring(0,120):'';
     document.getElementById('input-ingredients').value=ingredients;
 
     // Load image
     if(imageUrl){
       status.textContent='Loading image…';
       try{
-        const imgRes=await fetch(`https://api.microlink.io/?url=${encodeURIComponent(imageUrl)}&screenshot=false&embed=image.url`);
-        // Fetch image directly
-        const imgBlob=await fetch(imageUrl).then(r=>r.blob()).catch(()=>null);
-        if(imgBlob){
-          const reader=new FileReader();
-          reader.onload=ev=>{
-            compressPhoto(ev.target.result,compressed=>{
-              currentPhoto=compressed;
-              const preview=document.getElementById('photo-preview');
-              preview.src=compressed;preview.style.display='block';
-              document.getElementById('photo-picker').classList.add('has-photo');
-            });
-          };
-          reader.readAsDataURL(imgBlob);
-        }
+        const imgProxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+        const imgRes=await fetch(imgProxy);
+        const blob=await imgRes.blob();
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          compressPhoto(ev.target.result,compressed=>{
+            currentPhoto=compressed;
+            const preview=document.getElementById('photo-preview');
+            preview.src=compressed;preview.style.display='block';
+            document.getElementById('photo-picker').classList.add('has-photo');
+          });
+        };
+        reader.readAsDataURL(blob);
       }catch(e){}
     }
 
