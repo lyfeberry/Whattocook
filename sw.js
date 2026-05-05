@@ -1,6 +1,6 @@
 // WTC Service Worker — network-first for shell, cache-first for assets
 // Bump CACHE version any time you deploy new files.
-const CACHE = 'wtc-v28';
+const CACHE = 'wtc-v30';
 
 // These files are fetched network-first so updates are always picked up
 const NETWORK_FIRST = [
