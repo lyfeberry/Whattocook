@@ -569,7 +569,7 @@ let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
 
 /* ══ FIX #7: Plan depth is a single constant ══ */
 const PLAN_DAYS=5;
-const APP_VERSION='2.0';
+const APP_VERSION='2.1';
 // Plan keys 1-7 = tomorrow through next 7 days
 const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i+1),null]));
 let plan=JSON.parse(localStorage.getItem('wtc-plan')||JSON.stringify(_defaultPlan));
@@ -917,8 +917,13 @@ function renderShoppingList(grid){
   if(plannedMeals.length===0&&customShopItems.length===0){
     const d=document.createElement('div');
     d.className='shop-empty-msg';
-    d.innerHTML='Plan some meals first<br>or add items manually above';
-    grid.appendChild(d);return;
+    d.innerHTML='Add items above or plan meals<br>to auto-populate ingredients';
+    grid.appendChild(d);
+    return;
+  }
+
+  if(plannedMeals.length===0&&customShopItems.length>0){
+    // Only custom items — skip meal ingredients section, go straight to list
   }
 
   const allItems=[],seen=new Set();
