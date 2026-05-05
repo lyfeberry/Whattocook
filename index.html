@@ -126,7 +126,12 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .cat-btn { flex:1; padding:11px; border-radius:12px; border:1px solid var(--border); cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; background:#f2f2f7; color:#aeaeb2; transition:all 0.18s; }
 .cat-btn.active,.cat-btn.active-normal { background:var(--text); border-color:var(--text); color:#fff; }
 
-/* Import from web link-button */
+/* Ingredient chips */
+.ingredient-chips { display:flex; flex-wrap:wrap; gap:8px; width:100%; min-height:10px; }
+.ing-chip { display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:20px; border:1.5px solid var(--border); background:#fff; cursor:pointer; font-size:13px; font-weight:600; color:var(--text); transition:all 0.15s; font-family:inherit; }
+.ing-chip.selected { background:var(--text); border-color:var(--text); color:#fff; }
+.ing-chip.selected .chip-x { opacity:1; }
+.chip-x { font-size:14px; opacity:0.4; line-height:1; }
 .import-web-btn { display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; color:var(--accent); font-size:13px; font-weight:600; font-family:inherit; padding:10px 4px 0; margin:0 auto; }
 .bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:10; display:flex; align-items:center; justify-content:space-around; padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px)); background:#fff; border-top:1px solid var(--border); }
 .nav-btn { width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; background:transparent; transition:transform 0.15s; flex-shrink:0; }
@@ -368,7 +373,11 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
       <div class="step-nav"><button class="step-btn step-btn-back" id="s1back">← Back</button><button class="step-btn step-btn-next" id="s1next">Next →</button></div>
     </div>
     <div class="step-wrap" id="step-2">
-      <div class="field" style="width:100%"><label>Ingredients</label><textarea id="input-ingredients" placeholder="e.g. chicken, tomatoes, cream…"></textarea></div>
+      <div class="field" style="width:100%">
+        <label>Ingredients</label>
+        <div id="ingredient-chips" class="ingredient-chips"></div>
+        <textarea id="input-ingredients" placeholder="e.g. chicken, tomatoes, cream…" style="margin-top:10px;"></textarea>
+      </div>
       <div class="step-nav"><button class="step-btn step-btn-back" id="s2back">← Back</button><button class="step-btn step-btn-next" id="s2next">Next →</button></div>
     </div>
     <div class="step-wrap" id="step-3">
@@ -971,6 +980,7 @@ function openAddSheet(){
   document.getElementById('input-name').value='';
   document.getElementById('input-ingredients').value='';
   document.getElementById('input-notes').value='';
+  document.getElementById('ingredient-chips').innerHTML=''; // clear chips
   // Reset category buttons
   document.getElementById('cat-normal').className='cat-btn active-normal';
   document.getElementById('cat-cheat').className='cat-btn';
@@ -1020,11 +1030,49 @@ function doSaveMeal(){
   const raw=document.getElementById('input-name').value.trim();
   if(!raw){goStep(1,false);setTimeout(()=>document.getElementById('input-name').focus(),350);showToast('Please enter a meal name');return;}
   const name=raw.toUpperCase();
-  meals.unshift({id:makeId(),name,ingredients:document.getElementById('input-ingredients').value.trim(),notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto,category:currentCategory});
+  const rawIng=document.getElementById('input-ingredients').value.trim();
+  const ingredients=rawIng.split(',').map(s=>s.trim()).filter(Boolean).map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(', ');
+  meals.unshift({id:makeId(),name,ingredients,notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto,category:currentCategory});
   saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();showToast('Meal saved ✓');
 }
 
-/* ══ URL IMPORT ══ */
+/* ══ INGREDIENT CHIPS ══ */
+function buildIngredientChips(ingredientsStr){
+  const container=document.getElementById('ingredient-chips');
+  container.innerHTML='';
+  if(!ingredientsStr||!ingredientsStr.trim()){return;}
+  const items=ingredientsStr.split(',').map(s=>s.trim()).filter(Boolean);
+  if(items.length<2){return;} // if just one item or plain text, show textarea only
+  items.forEach(ing=>{
+    const capitalized=ing.charAt(0).toUpperCase()+ing.slice(1).toLowerCase();
+    const chip=document.createElement('button');
+    chip.type='button';
+    chip.className='ing-chip selected';
+    chip.dataset.value=capitalized;
+    chip.innerHTML=`${capitalized}<span class="chip-x">×</span>`;
+    chip.addEventListener('click',()=>{
+      chip.classList.toggle('selected');
+      syncChipsToTextarea();
+    });
+    container.appendChild(chip);
+  });
+  syncChipsToTextarea();
+}
+
+function syncChipsToTextarea(){
+  const chips=document.querySelectorAll('.ing-chip.selected');
+  const values=Array.from(chips).map(c=>c.dataset.value);
+  document.getElementById('input-ingredients').value=values.join(', ');
+}
+
+// Watch textarea for manual edits — rebuild chips
+document.getElementById('input-ingredients').addEventListener('input',function(){
+  const container=document.getElementById('ingredient-chips');
+  // Only rebuild if no chips exist yet (manual typing mode)
+  if(container.children.length===0) return;
+  // If user manually edits, clear chips and let textarea take over
+  container.innerHTML='';
+});
 function openUrlSheet(){
   document.getElementById('url-input').value='';
   document.getElementById('url-status').textContent='';
@@ -1060,6 +1108,8 @@ document.getElementById('url-fetch-btn').addEventListener('click',async()=>{
 
     document.getElementById('input-name').value=data.name;
     document.getElementById('input-ingredients').value=data.ingredients||'';
+    // Build chips from imported ingredients
+    buildIngredientChips(data.ingredients||'');
 
     if(data.imageUrl){
       status.textContent='Loading image…';
