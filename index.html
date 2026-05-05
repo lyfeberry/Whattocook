@@ -36,6 +36,7 @@
 <meta property="og:image" content="icon-512-any.png">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+img { -webkit-touch-callout:none !important; -webkit-user-select:none; user-select:none; pointer-events:none; }
 input,textarea { user-select:text; -webkit-user-select:text; }
 
 :root { --bg:#f5f5f7; --sheet-bg:#ffffff; --text:#1c1c1e; --text2:#6e6e73; --border:#e5e5ea; --accent:#6aa8a4; }
@@ -409,7 +410,10 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
     <input type="file" id="edit-photo-input" accept="image/*">
     <input type="file" id="edit-photo-camera-input" accept="image/*" capture="environment">
     <div class="field"><label>Meal Name</label><input type="text" id="edit-name"></div>
-    <div class="field"><label>Ingredients</label><textarea id="edit-ingredients"></textarea></div>
+    <div class="field"><label>Ingredients</label>
+      <div id="edit-ingredient-chips" class="ingredient-chips" style="margin-bottom:8px;"></div>
+      <textarea id="edit-ingredients" placeholder="e.g. chicken, tomatoes, cream…"></textarea>
+    </div>
     <div class="field"><label>Category</label>
       <div class="cat-toggle">
         <button class="cat-btn active-normal" id="edit-cat-normal" type="button">Regular Meal</button>
@@ -1154,12 +1158,45 @@ document.getElementById('url-fetch-btn').addEventListener('click',async()=>{
   }
 });
 
-/* ══ EDIT SHEET ══ */
+function buildEditIngredientChips(ingredientsStr){
+  const container=document.getElementById('edit-ingredient-chips');
+  container.innerHTML='';
+  if(!ingredientsStr||!ingredientsStr.trim()){return;}
+  const items=ingredientsStr.split(',').map(s=>s.trim()).filter(Boolean);
+  if(items.length<2){return;}
+  items.forEach(ing=>{
+    const capitalized=ing.charAt(0).toUpperCase()+ing.slice(1).toLowerCase();
+    const chip=document.createElement('button');
+    chip.type='button';
+    chip.className='ing-chip selected';
+    chip.dataset.value=capitalized;
+    chip.innerHTML=`${capitalized}<span class="chip-x">×</span>`;
+    chip.addEventListener('click',()=>{
+      chip.classList.toggle('selected');
+      syncEditChipsToTextarea();
+    });
+    container.appendChild(chip);
+  });
+  syncEditChipsToTextarea();
+}
+
+function syncEditChipsToTextarea(){
+  const chips=document.querySelectorAll('#edit-ingredient-chips .ing-chip.selected');
+  const values=Array.from(chips).map(c=>c.dataset.value);
+  document.getElementById('edit-ingredients').value=values.join(', ');
+}
+
+document.getElementById('edit-ingredients').addEventListener('input',function(){
+  const container=document.getElementById('edit-ingredient-chips');
+  if(container.children.length===0) return;
+  container.innerHTML='';
+});
 function openEditSheet(idx){
   editIdx=idx;const meal=meals[idx];editPhoto=meal.photo||null;
   document.getElementById('edit-name').value=meal.name||'';
   document.getElementById('edit-ingredients').value=meal.ingredients||'';
   document.getElementById('edit-notes').value=meal.notes||'';
+  buildEditIngredientChips(meal.ingredients||'');
   // Set category buttons
   const isCheatMeal=meal.category==='cheat';
   document.getElementById('edit-cat-normal').className='cat-btn'+(isCheatMeal?'':' active-normal');
