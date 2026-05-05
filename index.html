@@ -66,7 +66,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .search-cancel { background:none; border:none; cursor:pointer; color:var(--accent); font-size:15px; font-weight:600; font-family:inherit; padding:4px 2px; }
 
 /* MAIN */
-.main { position:fixed; inset:0; z-index:5; overflow-y:auto; overflow-x:hidden; padding:calc(68px + env(safe-area-inset-top,0px)) 12px calc(110px + env(safe-area-inset-bottom,0px)); -webkit-overflow-scrolling:touch; background:var(--bg); }
+.main { position:fixed; inset:0; z-index:5; overflow-y:auto; overflow-x:hidden; padding:calc(88px + env(safe-area-inset-top,0px)) 12px calc(110px + env(safe-area-inset-bottom,0px)); -webkit-overflow-scrolling:touch; background:var(--bg); }
 .main::-webkit-scrollbar { display:none; }
 
 /* EMPTY STATE */
@@ -102,10 +102,14 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .card-pick-btn.planned svg { stroke:#fff; }
 
 /* Card name below photo */
-.meal-card .card-body { padding:10px 10px 12px; }
-.meal-card .card-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.meal-card .card-body { padding:8px 10px 10px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.meal-card .card-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; flex:1; text-align:right; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
-/* CARD ACTION BAR (long press) */
+/* Card add-to-plan button in footer row */
+.card-add-btn { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--border); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; }
+.card-add-btn svg { width:12px; height:12px; stroke:#aeaeb2; fill:none; stroke-width:2.5; stroke-linecap:round; }
+.card-add-btn.planned { background:var(--accent); border-color:var(--accent); }
+.card-add-btn.planned svg { stroke:#fff; }
 .card-action-bar { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:10px; z-index:5; opacity:0; pointer-events:none; transition:opacity 0.2s; background:rgba(255,255,255,0.88); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 .meal-card.shaking .card-action-bar { opacity:1; pointer-events:all; }
 .card-action-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px; border:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; }
@@ -122,7 +126,8 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .cat-btn { flex:1; padding:11px; border-radius:12px; border:1px solid var(--border); cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; background:#f2f2f7; color:#aeaeb2; transition:all 0.18s; }
 .cat-btn.active,.cat-btn.active-normal { background:var(--text); border-color:var(--text); color:#fff; }
 
-/* BOTTOM NAV */
+/* Import from web link-button */
+.import-web-btn { display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; color:var(--accent); font-size:13px; font-weight:600; font-family:inherit; padding:10px 4px 0; margin:0 auto; }
 .bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:10; display:flex; align-items:center; justify-content:space-around; padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px)); background:#fff; border-top:1px solid var(--border); }
 .nav-btn { width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; background:transparent; transition:transform 0.15s; flex-shrink:0; }
 .nav-btn svg { width:22px; height:22px; stroke:#aeaeb2; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
@@ -262,6 +267,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
 #photo-input,#photo-camera-input,#edit-photo-input,#edit-photo-camera-input,#import-input { display:none; }
+#input-name, #edit-name { text-transform:uppercase; letter-spacing:0.5px; }
 
 /* Photo source sheet */
 .photo-sheet-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:90; opacity:0; pointer-events:none; transition:opacity 0.22s; }
@@ -316,7 +322,12 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 
 <nav class="bottom-nav">
   <button class="nav-btn" id="btn-add"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-  <button class="nav-btn home-btn nav-active" id="btn-home"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/><polyline points="9 21 9 13 15 13 15 21"/></svg></button>
+  <button class="nav-btn home-btn nav-active" id="btn-home">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5z"/>
+      <polyline points="9 21 9 13 15 13 15 21"/>
+    </svg>
+  </button>
   <button class="nav-btn" id="btn-planner"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
 </nav>
 
@@ -346,7 +357,11 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
       <input type="file" id="photo-input" accept="image/*">
       <input type="file" id="photo-camera-input" accept="image/*" capture="environment">
       <p class="step-hint">Camera or gallery</p>
-      <div class="step-nav" style="margin-top:20px"><button class="step-btn step-btn-next" id="s0next">Next →</button></div>
+      <button class="import-web-btn" id="import-web-btn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Import from web
+      </button>
+      <div class="step-nav" style="margin-top:12px"><button class="step-btn step-btn-next" id="s0next">Next →</button></div>
     </div>
     <div class="step-wrap" id="step-1">
       <div class="field" style="width:100%"><label>Meal Name</label><input type="text" id="input-name" placeholder="e.g. Chicken Tikka Masala"></div>
@@ -431,6 +446,23 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
       <div class="settings-label" style="margin-bottom:8px;">Notes</div>
       <div id="detail-notes" style="font-size:15px;color:var(--text2);line-height:1.6;font-style:italic;"></div>
     </div>
+  </div>
+</div>
+
+<!-- URL Import Sheet -->
+<div class="sheet-overlay" id="url-overlay"></div>
+<div class="sheet" id="url-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header"><span class="sheet-title">Import from Web</span><button class="sheet-btn" id="url-cancel">Cancel</button></div>
+  <div class="sheet-body">
+    <div class="field">
+      <label>Recipe URL</label>
+      <input type="url" id="url-input" placeholder="https://www.bbcgoodfood.com/recipes/…" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="step-btn step-btn-next" id="url-fetch-btn" style="width:100%;margin-bottom:16px;">
+      Fetch Recipe
+    </button>
+    <div id="url-status" style="font-size:13px;color:#aeaeb2;text-align:center;min-height:20px;"></div>
   </div>
 </div>
 
@@ -650,6 +682,9 @@ function renderCards(slideDir=null){
         <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
       </div>
       <div class="card-body">
+        <button class="card-add-btn${planned?' planned':''}" data-id="${meal.id}">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
         <div class="card-name">${esc(meal.name)||'Untitled'}</div>
       </div>`;
 
@@ -664,6 +699,10 @@ function renderCards(slideDir=null){
     card.addEventListener('mouseleave',cL);
 
     card.querySelector('.card-pick-btn').addEventListener('click',e=>{
+      e.stopPropagation();if(lf)return;
+      openDayPicker(meal.id);
+    });
+    card.querySelector('.card-add-btn').addEventListener('click',e=>{
       e.stopPropagation();if(lf)return;
       openDayPicker(meal.id);
     });
@@ -985,12 +1024,115 @@ document.getElementById('edit-cat-cheat').addEventListener('click',()=>{
   document.getElementById('edit-cat-normal').className='cat-btn';
 });
 function doSaveMeal(){
-  const name=document.getElementById('input-name').value.trim();
-  if(!name){goStep(1,false);setTimeout(()=>document.getElementById('input-name').focus(),350);showToast('Please enter a meal name');return;}
-  // FIX #9: safe ID that won't collide on rapid inserts
+  const raw=document.getElementById('input-name').value.trim();
+  if(!raw){goStep(1,false);setTimeout(()=>document.getElementById('input-name').focus(),350);showToast('Please enter a meal name');return;}
+  const name=raw.toUpperCase();
   meals.unshift({id:makeId(),name,ingredients:document.getElementById('input-ingredients').value.trim(),notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto,category:currentCategory});
   saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();showToast('Meal saved ✓');
 }
+
+/* ══ URL IMPORT ══ */
+function openUrlSheet(){
+  document.getElementById('url-input').value='';
+  document.getElementById('url-status').textContent='';
+  document.getElementById('url-fetch-btn').textContent='Fetch Recipe';
+  document.getElementById('url-fetch-btn').disabled=false;
+  document.getElementById('url-sheet').classList.add('open');
+  document.getElementById('url-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('url-input').focus(),400);
+}
+function closeUrlSheet(){
+  document.getElementById('url-sheet').classList.remove('open');
+  document.getElementById('url-overlay').classList.remove('open');
+}
+document.getElementById('url-cancel').addEventListener('click',closeUrlSheet);
+document.getElementById('url-overlay').addEventListener('click',closeUrlSheet);
+document.getElementById('import-web-btn').addEventListener('click',openUrlSheet);
+
+document.getElementById('url-fetch-btn').addEventListener('click',async()=>{
+  const url=document.getElementById('url-input').value.trim();
+  if(!url){showToast('Please paste a URL');return;}
+  const status=document.getElementById('url-status');
+  const btn=document.getElementById('url-fetch-btn');
+  btn.textContent='Fetching…';btn.disabled=true;
+  status.textContent='Contacting recipe page…';
+
+  try{
+    // Use Claude API to extract recipe info from URL
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{
+          role:'user',
+          content:`Visit this recipe URL and extract the following. URL: ${url}
+
+Return ONLY a JSON object with these fields (no markdown, no explanation):
+{
+  "name": "recipe name in UPPERCASE",
+  "ingredients": "only the main ingredients as a short comma-separated list, max 8 items, no quantities",
+  "imageUrl": "direct URL to the main recipe image on that page, or null if not found"
+}
+
+Be concise. Ingredients should be simple nouns only (e.g. "chicken, garlic, cream, pasta").`
+        }]
+      })
+    });
+
+    const data=await response.json();
+
+    // Extract text from response (may include tool use blocks)
+    let text='';
+    if(data.content){
+      for(const block of data.content){
+        if(block.type==='text') text+=block.text;
+      }
+    }
+
+    // Parse JSON from response
+    const match=text.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('No data extracted');
+    const recipe=JSON.parse(match[0]);
+
+    if(!recipe.name) throw new Error('Could not read recipe name');
+
+    // Fill in the form fields
+    document.getElementById('input-name').value=recipe.name.toUpperCase();
+    document.getElementById('input-ingredients').value=recipe.ingredients||'';
+
+    // Try to load the image
+    if(recipe.imageUrl){
+      status.textContent='Loading image…';
+      try{
+        const imgResp=await fetch(recipe.imageUrl);
+        const blob=await imgResp.blob();
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          compressPhoto(ev.target.result,compressed=>{
+            currentPhoto=compressed;
+            const preview=document.getElementById('photo-preview');
+            preview.src=compressed;preview.style.display='block';
+            document.getElementById('photo-picker').classList.add('has-photo');
+          });
+        };
+        reader.readAsDataURL(blob);
+      }catch(e){
+        // Image failed to load - no photo, that's ok
+      }
+    }
+
+    closeUrlSheet();
+    goStep(1); // jump to name step so user can review
+    showToast('Recipe imported ✓');
+
+  }catch(err){
+    status.textContent='Could not fetch recipe. Try another URL.';
+    btn.textContent='Try Again';btn.disabled=false;
+  }
+});
 
 /* ══ EDIT SHEET ══ */
 function openEditSheet(idx){
@@ -1013,7 +1155,8 @@ document.getElementById('edit-overlay').addEventListener('click',closeEditSheet)
 document.getElementById('edit-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
 document.getElementById('edit-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeEditSheet();},{passive:true});
 document.getElementById('edit-save').addEventListener('click',()=>{
-  const name=document.getElementById('edit-name').value.trim();if(!name){document.getElementById('edit-name').focus();return;}
+  const raw=document.getElementById('edit-name').value.trim();if(!raw){document.getElementById('edit-name').focus();return;}
+  const name=raw.toUpperCase();
   const editIsCheat=document.getElementById('edit-cat-cheat').classList.contains('active');
   meals[editIdx].name=name;meals[editIdx].ingredients=document.getElementById('edit-ingredients').value.trim();meals[editIdx].notes=document.getElementById('edit-notes').value.trim();meals[editIdx].photo=editPhoto;meals[editIdx].category=editIsCheat?'cheat':'normal';
   saveMeals();closeEditSheet();_lastRenderedKey='';renderCards();showToast('Meal updated ✓');
