@@ -343,7 +343,7 @@ body.dark .seg-btn.active { background:#636366; color:#fff; }
 .weight-btn.active-heavy  { background:#fdecea; border-color:#ff3b30; color:#ff3b30; }
 
 /* PLANNED-DIM section on home */
-.planned-dim-section { width:100%; margin-top:6px; }
+.planned-dim-section { width:100%; margin-top:6px; grid-column:1/-1; }
 .planned-dim-divider { width:100%; border:none; border-top:1px solid var(--border); margin:18px 0 14px; }
 .planned-dim-label { font-size:11px; font-weight:700; color:#c7c7cc; letter-spacing:0.7px; text-transform:uppercase; margin-bottom:12px; padding:0 2px; }
 .planned-dim-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; opacity:0.4; pointer-events:none; filter:grayscale(30%); }
@@ -1906,6 +1906,7 @@ if ('serviceWorker' in navigator) {
 
 /* ══ INIT ══ */
 savePlan();
+_lastRenderedKey='';
 if(defaultView==='planner'){
   viewMode='planner';
   document.getElementById('btn-planner').classList.add('nav-active','planner-active');
@@ -1913,7 +1914,8 @@ if(defaultView==='planner'){
 }else{
   viewMode='home';
 }
-renderCards();
+// Use requestAnimationFrame to ensure DOM is fully ready before first render
+requestAnimationFrame(()=>{ _lastRenderedKey=''; renderCards(); });
 </script>
 
 <!-- PWA Install banner -->
