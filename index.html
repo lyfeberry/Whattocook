@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#f5f5f7">
+<meta name="theme-color" content="#ffffff">
 <title>WTC — Meal Planner</title>
 <meta name="description" content="Plan meals, build shopping lists, and track your recipe collection.">
 
@@ -39,7 +39,36 @@
 img { -webkit-touch-callout:none !important; -webkit-user-select:none; user-select:none; pointer-events:none; }
 input,textarea { user-select:text; -webkit-user-select:text; }
 
-:root { --bg:#f5f5f7; --sheet-bg:#ffffff; --text:#1c1c1e; --text2:#6e6e73; --border:#e5e5ea; --accent:#6aa8a4; }
+:root { --bg:#ffffff; --sheet-bg:#f2f2f7; --text:#1c1c1e; --text2:#6e6e73; --border:#e5e5ea; --accent:#6aa8a4; }
+
+body.dark { --bg:#1c1c1e; --sheet-bg:#2c2c2e; --text:#f5f5f7; --text2:#aeaeb2; --border:#3a3a3c; }
+body.dark .meal-card { background:#2c2c2e; box-shadow:0 2px 12px rgba(0,0,0,0.3),0 0 0 1px rgba(255,255,255,0.06); }
+body.dark .card-add-btn { background:#3a3a3c; border-color:#48484a; }
+body.dark .cheat-nav-btn { background:#2c2c2e; }
+body.dark .icon-btn { background:#2c2c2e; }
+body.dark .search-bar { background:#2c2c2e; }
+body.dark .search-input { background:#3a3a3c; color:var(--text); }
+body.dark .bottom-nav { background:#2c2c2e; border-color:var(--border); }
+body.dark .sheet { background:var(--sheet-bg); }
+body.dark .sheet-header { border-color:var(--border); }
+body.dark .field input,.field textarea { background:#3a3a3c; color:var(--text); }
+body.dark .cat-btn { background:#3a3a3c; }
+body.dark .step-btn-back { background:#3a3a3c; color:var(--text2); }
+body.dark .photo-picker { background:#3a3a3c; border-color:#48484a; }
+body.dark .settings-row { border-color:var(--border); }
+body.dark .settings-toggle-row { border-color:var(--border); }
+body.dark .plan-day-card { background:#2c2c2e; box-shadow:0 2px 12px rgba(0,0,0,0.3),0 0 0 1px rgba(255,255,255,0.06); }
+body.dark .plan-day-header { border-color:var(--border); }
+body.dark .shop-item { background:#2c2c2e; box-shadow:0 1px 4px rgba(0,0,0,0.2),0 0 0 1px rgba(255,255,255,0.06); }
+body.dark .planner-tab { background:#3a3a3c; color:var(--text2); }
+body.dark .planner-tab.active { background:#f5f5f7; color:#1c1c1e; }
+body.dark .card-action-bar { background:rgba(44,44,46,0.92); }
+body.dark .card-btn-done { background:#3a3a3c; color:var(--text2); }
+body.dark .detail-ing-item { background:#3a3a3c; }
+body.dark .share-plan-btn { background:#2c2c2e; border-color:var(--border); }
+body.dark .plan-len-btn { background:#3a3a3c; border-color:var(--border); color:var(--text2); }
+body.dark .ingredient-chips .ing-chip { background:#3a3a3c; border-color:#48484a; color:var(--text); }
+body.dark .ing-chip.selected { background:var(--text); color:var(--bg); border-color:var(--text); }
 
 body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif; }
 
@@ -113,12 +142,14 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .card-add-btn svg { width:12px; height:12px; stroke:#aeaeb2; fill:none; stroke-width:2.5; stroke-linecap:round; }
 .card-add-btn.planned { background:var(--accent); border-color:var(--accent); }
 .card-add-btn.planned svg { stroke:#fff; }
-.card-action-bar { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:10px; z-index:5; opacity:0; pointer-events:none; transition:opacity 0.2s; background:rgba(255,255,255,0.88); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.card-action-bar { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; z-index:5; opacity:0; pointer-events:none; transition:opacity 0.2s; background:rgba(255,255,255,0.88); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.card-action-bar-row { display:flex; gap:10px; }
 .meal-card.shaking .card-action-bar { opacity:1; pointer-events:all; }
 .card-action-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px; border:none; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; }
 .card-action-btn:active { opacity:0.7; }
 .card-btn-edit   { background:#e8f4fd; color:#007aff; }
 .card-btn-delete { background:#fdecea; color:#ff3b30; }
+.card-btn-done   { background:#f2f2f7; color:#6e6e73; font-size:12px; padding:6px 20px; }
 .card-action-btn svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
 
 /* CHEAT BADGE (add/edit inline) */
@@ -263,28 +294,31 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .shop-action-btn { width:100%; padding:13px; border-radius:14px; border:none; cursor:pointer; background:#fdecea; color:#ff3b30; font-size:14px; font-weight:600; font-family:inherit; margin-top:8px; }
 .shop-empty-msg { text-align:center; color:#aeaeb2; font-size:14px; line-height:1.7; padding:40px 0; }
 
-/* SETTINGS */
-.settings-section { margin-bottom:26px; }
-.settings-label { font-size:11px; font-weight:700; color:#aeaeb2; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:12px; }
-.settings-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
+/* SETTINGS — professional grouped layout */
+.settings-group { margin-bottom:32px; }
+.settings-group-label { font-size:12px; font-weight:700; color:#aeaeb2; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:8px; padding:0 4px; }
+/* Card-style group block */
+.settings-block { background:var(--sheet-bg); border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06),0 0 0 1px var(--border); }
+.settings-row { display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); }
 .settings-row:last-child { border-bottom:none; }
-.settings-row-label { font-size:14px; color:var(--text2); }
-.settings-row-value { font-size:14px; font-weight:600; color:var(--text); }
-.skin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-.skin-swatch { height:42px; border-radius:10px; border:2px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; transition:transform 0.15s,border-color 0.2s; opacity:0.75; }
-.skin-swatch:active { transform:scale(0.94); }
-.skin-swatch.active { border-color:var(--text); opacity:1; }
-.skin-swatch[data-skin="ocean"]  { background:#003d5c; color:#5dd4f0; }
-.skin-swatch[data-skin="ember"]  { background:#4a1a00; color:#ff8c42; }
-.skin-swatch[data-skin="forest"] { background:#0a2e1a; color:#3ddc84; }
-.skin-swatch[data-skin="violet"] { background:#1e0040; color:#c47aff; }
-.skin-swatch[data-skin="rose"]   { background:#3d001a; color:#ff6b9d; }
-.skin-swatch[data-skin="gold"]   { background:#2e1f00; color:#ffcc00; }
-.skin-swatch[data-skin="arctic"] { background:#001a2e; color:#a0e8ff; }
-.io-row { display:flex; gap:10px; }
-.io-btn { flex:1; padding:13px; border-radius:14px; border:1px solid var(--border); cursor:pointer; background:#fff; color:var(--text); font-size:14px; font-weight:600; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px; }
-.io-btn:active { background:#f2f2f7; }
-.io-btn svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+/* Icon badge on each row */
+.settings-row-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.settings-row-icon svg { width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.settings-row-text { flex:1; min-width:0; }
+.settings-row-label { font-size:15px; color:var(--text); font-weight:400; display:block; }
+.settings-row-sub { font-size:12px; color:var(--text2); margin-top:1px; display:block; }
+.settings-row-value { font-size:15px; font-weight:600; color:var(--text2); flex-shrink:0; }
+.settings-row-chevron { width:7px; height:12px; flex-shrink:0; stroke:#c7c7cc; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+/* Segment control for plan length */
+.seg-control { display:flex; background:#e5e5ea; border-radius:9px; padding:2px; gap:2px; flex-shrink:0; }
+.seg-btn { padding:5px 12px; border-radius:7px; border:none; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; background:transparent; color:var(--text2); transition:all 0.18s; }
+.seg-btn.active { background:#fff; color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.12); }
+body.dark .seg-control { background:#3a3a3c; }
+body.dark .seg-btn.active { background:#636366; color:#fff; }
+/* Danger row */
+.settings-row-danger .settings-row-label { color:#ff3b30; }
+/* About block — centered, muted */
+.settings-about { text-align:center; color:#c7c7cc; font-size:13px; padding:8px 0 4px; }
 
 /* PLANNER TABS */
 .planner-tabs { display:flex; gap:8px; margin-bottom:16px; margin-top:4px; position:sticky; top:0; background:var(--bg); padding:10px 0 6px; z-index:2; }
@@ -316,9 +350,10 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 .weight-btn.active-heavy  { background:#fdecea; border-color:#ff3b30; color:#ff3b30; }
 
 /* PLANNED-DIM section on home */
-.planned-dim-section { width:100%; margin-top:18px; }
-.planned-dim-label { font-size:11px; font-weight:700; color:#c7c7cc; letter-spacing:0.7px; text-transform:uppercase; margin-bottom:10px; padding:0 2px; }
-.planned-dim-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; opacity:0.45; pointer-events:none; }
+.planned-dim-section { width:100%; margin-top:6px; }
+.planned-dim-divider { width:100%; border:none; border-top:1px solid var(--border); margin:18px 0 14px; }
+.planned-dim-label { font-size:11px; font-weight:700; color:#c7c7cc; letter-spacing:0.7px; text-transform:uppercase; margin-bottom:12px; padding:0 2px; }
+.planned-dim-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; opacity:0.4; pointer-events:none; filter:grayscale(30%); }
 
 /* DRAG HANDLE on plan day cards */
 .drag-handle { width:36px; display:flex; align-items:center; justify-content:center; cursor:grab; flex-shrink:0; touch-action:none; }
@@ -502,40 +537,114 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
   <div class="sheet-handle"></div>
   <div class="sheet-header"><span class="sheet-title">Settings</span><button class="sheet-btn" id="settings-close">Done</button></div>
   <div class="sheet-body">
-    <div class="settings-section">
-      <div class="settings-label">Library</div>
-      <div class="settings-row"><span class="settings-row-label">Total Meals</span><span class="settings-row-value" id="stat-total">0</span></div>
-      <div class="settings-row"><span class="settings-row-label">Planned</span><span class="settings-row-value" id="stat-planned">0</span></div>
-      <div class="settings-row"><span class="settings-row-label">App Version</span><span class="settings-row-value" id="stat-version">—</span></div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-label">Planner</div>
-      <div class="settings-toggle-row">
-        <span class="toggle-label">Show "Today" slot</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="toggle-today">
-          <div class="toggle-track"></div>
-          <div class="toggle-thumb"></div>
-        </label>
-      </div>
-      <div class="settings-row" style="border-bottom:none;">
-        <span class="settings-row-label">Plan length</span>
-        <div style="display:flex;gap:6px;">
-          <button class="plan-len-btn" data-days="3">3 days</button>
-          <button class="plan-len-btn" data-days="5">5 days</button>
-          <button class="plan-len-btn" data-days="7">7 days</button>
+
+    <!-- APPEARANCE -->
+    <div class="settings-group">
+      <div class="settings-group-label">Appearance</div>
+      <div class="settings-block">
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#636366;"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Dark Mode</span></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-dark">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
         </div>
       </div>
     </div>
-    <div class="settings-section">
-      <div class="settings-label">Data</div>
-      <div class="io-row">
-        <button class="io-btn" id="export-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
-        <button class="io-btn" id="import-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
+
+    <!-- PLANNER -->
+    <div class="settings-group">
+      <div class="settings-group-label">Planner</div>
+      <div class="settings-block">
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#34c759;"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Show Today Slot</span><span class="settings-row-sub">Add today as first planner day</span></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-today">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#007aff;"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Plan Length</span></div>
+          <div class="seg-control">
+            <button class="seg-btn plan-len-btn" data-days="3">3</button>
+            <button class="seg-btn plan-len-btn" data-days="5">5</button>
+            <button class="seg-btn plan-len-btn" data-days="7">7</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#ff9500;"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Open on Start</span><span class="settings-row-sub">Which screen shows first</span></div>
+          <div class="seg-control">
+            <button class="seg-btn default-view-btn" data-view="home">Home</button>
+            <button class="seg-btn default-view-btn" data-view="planner">Planner</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#6aa8a4;"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Show Last Planned</span><span class="settings-row-sub">Date label under meal name</span></div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-last-planned">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY LIBRARY -->
+    <div class="settings-group">
+      <div class="settings-group-label">My Library</div>
+      <div class="settings-block">
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#ff9500;"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Total Meals</span></div>
+          <span class="settings-row-value" id="stat-total">0</span>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-icon" style="background:#6aa8a4;"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Currently Planned</span></div>
+          <span class="settings-row-value" id="stat-planned">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA -->
+    <div class="settings-group">
+      <div class="settings-group-label">Data</div>
+      <div class="settings-block">
+        <div class="settings-row" id="export-row" style="cursor:pointer;">
+          <div class="settings-row-icon" style="background:#5856d6;"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Export Meals</span><span class="settings-row-sub">Save a backup file</span></div>
+          <svg class="settings-row-chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"/></svg>
+        </div>
+        <div class="settings-row" id="import-row" style="cursor:pointer;">
+          <div class="settings-row-icon" style="background:#34aadc;"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Import Meals</span><span class="settings-row-sub">Restore from a backup file</span></div>
+          <svg class="settings-row-chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"/></svg>
+        </div>
         <input type="file" id="import-input" accept=".json">
       </div>
-      <button id="clear-meals-btn" style="width:100%;margin-top:12px;padding:13px;border-radius:14px;border:none;cursor:pointer;background:#fdecea;color:#ff3b30;font-size:14px;font-weight:600;font-family:inherit;">Clear All Meals…</button>
     </div>
+
+    <!-- DANGER ZONE -->
+    <div class="settings-group">
+      <div class="settings-block">
+        <div class="settings-row settings-row-danger" id="clear-meals-row" style="cursor:pointer;">
+          <div class="settings-row-icon" style="background:#ff3b30;"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></div>
+          <div class="settings-row-text"><span class="settings-row-label">Clear All Meals</span><span class="settings-row-sub">Cannot be undone</span></div>
+          <svg class="settings-row-chevron" viewBox="0 0 8 14"><polyline points="1 1 7 7 1 13"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="settings-about">WTC — Meal Planner &nbsp;·&nbsp; v<span id="stat-version">—</span></div>
+
   </div>
 </div>
 
@@ -669,8 +778,12 @@ const APP_VERSION='2.7';
 // Runtime plan days — can be 3, 5, or 7; default 5
 let PLAN_DAYS=parseInt(localStorage.getItem('wtc-plan-days')||'5');
 let showTodaySlot=localStorage.getItem('wtc-show-today')==='1';
+let defaultView=localStorage.getItem('wtc-default-view')||'home'; // 'home' or 'planner'
+let showLastPlanned=localStorage.getItem('wtc-show-last-planned')!=='0'; // default ON
 function savePlanDays(){localStorage.setItem('wtc-plan-days',String(PLAN_DAYS));}
 function saveShowToday(){localStorage.setItem('wtc-show-today',showTodaySlot?'1':'0');}
+function saveDefaultView(){localStorage.setItem('wtc-default-view',defaultView);}
+function saveShowLastPlanned(){localStorage.setItem('wtc-show-last-planned',showLastPlanned?'1':'0');}
 
 let currentWeight='medium'; // for add sheet
 // Plan keys 1-5 = tomorrow through +5 days
@@ -724,6 +837,9 @@ let viewMode='home';
 let homeTab=localStorage.getItem('wtc-home-tab')||'meals'; // 'meals' or 'cheat'
 let plannerTab=localStorage.getItem('wtc-tab')||'plan';
 let currentSkin=localStorage.getItem('wtc-skin')||'ocean';
+let darkMode=localStorage.getItem('wtc-dark')==='1';
+if(darkMode)document.body.classList.add('dark');
+function saveDark(){localStorage.setItem('wtc-dark',darkMode?'1':'0');}
 let currentPhoto=null,editPhoto=null,editIdx=-1,searchQuery='',sy=0;
 let currentCategory='normal'; // 'normal' or 'cheat' — used during add flow
 
@@ -860,7 +976,7 @@ function renderCards(slideDir=null){
   empty.style.display=list.length===0?'flex':'none';
 
   // FIX #4: keyed diffing — only rebuild when list actually changes
-  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)+'|'+(m.category||'')+'|'+(m.lastPlanned||0)).join(',')+homeTab;
+  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)+'|'+(m.category||'')+'|'+(m.lastPlanned||0)).join(',')+homeTab+String(showLastPlanned);
   if(newKey===_lastRenderedKey&&!slideDir){updateStats();return;}
   _lastRenderedKey=newKey;
 
@@ -883,13 +999,16 @@ function renderCards(slideDir=null){
       ${photoHTML}
       ${cheatBadge}
       <div class="card-action-bar">
-        <button class="card-action-btn card-btn-edit" data-idx="${idx}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
-        <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
+        <div class="card-action-bar-row">
+          <button class="card-action-btn card-btn-edit" data-idx="${idx}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+          <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
+        </div>
+        <button class="card-action-btn card-btn-done">Done</button>
       </div>
       <div class="card-body">
         <div style="flex:1;min-width:0;">
           <div class="card-name">${esc(meal.name)||'Untitled'}</div>
-          ${meal.lastPlanned?`<div class="card-last-planned">${lastPlannedLabel(meal.lastPlanned)}</div>`:''}
+          ${showLastPlanned&&meal.lastPlanned?`<div class="card-last-planned">${lastPlannedLabel(meal.lastPlanned)}</div>`:''}
         </div>
         <button class="card-add-btn${planned?' planned':''}" data-id="${meal.id}">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -916,6 +1035,9 @@ function renderCards(slideDir=null){
       if(card.classList.contains('shaking')){stopAllShaking();return;}
       openDetailSheet(meal);
     });
+    card.querySelector('.card-btn-done').addEventListener('click',e=>{
+      e.stopPropagation();stopAllShaking();
+    });
     card.querySelector('.card-btn-edit').addEventListener('click',e=>{
       e.stopPropagation();openEditSheet(parseInt(e.currentTarget.dataset.idx));stopAllShaking();
     });
@@ -938,7 +1060,7 @@ function renderCards(slideDir=null){
   if(plannedList.length>0){
     const dimSection=document.createElement('div');
     dimSection.className='planned-dim-section';
-    dimSection.innerHTML=`<div class="planned-dim-label">In your plan</div>`;
+    dimSection.innerHTML=`<hr class="planned-dim-divider"><div class="planned-dim-label">In your plan</div>`;
     const dimGrid=document.createElement('div');
     dimGrid.className='planned-dim-grid';
     plannedList.forEach(meal=>{
@@ -947,7 +1069,7 @@ function renderCards(slideDir=null){
       const photoHTML=meal.photo
         ?`<div class="card-photo-wrap"><img class="card-photo" src="${meal.photo}" alt="${esc(meal.name)}"></div>`
         :`<div class="card-photo-wrap"><div class="card-photo-placeholder" style="background:${mealGradient(meal.name)}"><div class="placeholder-letter">${mealInitials(meal.name||'')}</div></div></div>`;
-      dc.innerHTML=`${photoHTML}<div class="card-body" style="padding:5px 7px 7px;"><div style="flex:1;min-width:0;"><div class="card-name" style="font-size:10px;-webkit-line-clamp:1;">${esc(meal.name)}</div></div></div>`;
+      dc.innerHTML=`${photoHTML}<div class="card-body"><div style="flex:1;min-width:0;"><div class="card-name">${esc(meal.name)}</div></div></div>`;
       dimGrid.appendChild(dc);
     });
     dimSection.appendChild(dimGrid);
@@ -1664,10 +1786,14 @@ function updateStats(){
   document.getElementById('stat-total').textContent=meals.length;
   document.getElementById('stat-planned').textContent=getPlannedIds().length+' / '+PLAN_DAYS;
   document.getElementById('stat-version').textContent=APP_VERSION;
-  // Sync settings controls to current state
+  document.getElementById('toggle-dark').checked=darkMode;
   document.getElementById('toggle-today').checked=showTodaySlot;
+  document.getElementById('toggle-last-planned').checked=showLastPlanned;
   document.querySelectorAll('.plan-len-btn').forEach(b=>{
     b.classList.toggle('active',parseInt(b.dataset.days)===PLAN_DAYS);
+  });
+  document.querySelectorAll('.default-view-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.view===defaultView);
   });
 }
 function openSettings(){updateStats();openSheet('settings-sheet');}
@@ -1678,8 +1804,22 @@ document.getElementById('settings-close').addEventListener('click',closeSettings
 document.getElementById('settings-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
 document.getElementById('settings-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeSettings();},{passive:true});
 
-// Today toggle
-document.getElementById('toggle-today').addEventListener('change',function(){
+// Default view buttons
+document.querySelectorAll('.default-view-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    defaultView=btn.dataset.view;
+    saveDefaultView();
+    updateStats();
+  });
+});
+
+// Show last planned toggle
+document.getElementById('toggle-last-planned').addEventListener('change',function(){
+  showLastPlanned=this.checked;
+  saveShowLastPlanned();
+  _lastRenderedKey='';
+  renderCards();
+});
   showTodaySlot=this.checked;saveShowToday();
   if(viewMode==='planner')renderPlanner();
 });
@@ -1704,7 +1844,22 @@ function applySkin(skin){
 }
 document.querySelectorAll('.skin-swatch').forEach(s=>s.addEventListener('click',()=>applySkin(s.dataset.skin)));
 
-document.getElementById('clear-meals-btn').addEventListener('click',()=>{
+// Dark mode toggle
+document.getElementById('toggle-dark').addEventListener('change',function(){
+  darkMode=this.checked;
+  document.body.classList.toggle('dark',darkMode);
+  saveDark();
+});
+
+document.getElementById('export-row').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({version:3,meals,plan},null,2)],{type:'application/json'});
+  const now=new Date();
+  const date=now.toISOString().slice(0,10);
+  const time=now.toTimeString().slice(0,5).replace(':','-');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`wtc-meals-${date}-${time}.json`;a.click();URL.revokeObjectURL(url);showToast('Exported ✓');
+});
+document.getElementById('import-row').addEventListener('click',()=>document.getElementById('import-input').click());
+document.getElementById('clear-meals-row').addEventListener('click',()=>{
   if(!confirm(`Delete all ${meals.length} meals? This cannot be undone.`))return;
   meals=[];
   Object.keys(plan).forEach(k=>{plan[k]=null;});
@@ -1713,14 +1868,6 @@ document.getElementById('clear-meals-btn').addEventListener('click',()=>{
   closeSettings();
   showToast('All meals deleted');
 });
-document.getElementById('export-btn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify({version:3,meals,plan},null,2)],{type:'application/json'});
-  const now=new Date();
-  const date=now.toISOString().slice(0,10);
-  const time=now.toTimeString().slice(0,5).replace(':','-');
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`wtc-meals-${date}-${time}.json`;a.click();URL.revokeObjectURL(url);showToast('Exported ✓');
-});
-document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-input').click());
 document.getElementById('import-input').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=ev=>{
@@ -1810,7 +1957,13 @@ if ('serviceWorker' in navigator) {
 
 /* ══ INIT ══ */
 savePlan();
-viewMode='home';
+if(defaultView==='planner'){
+  viewMode='planner';
+  document.getElementById('btn-planner').classList.add('nav-active','planner-active');
+  document.getElementById('btn-home').classList.remove('nav-active');
+}else{
+  viewMode='home';
+}
 renderCards();
 </script>
 
