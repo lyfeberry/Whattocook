@@ -106,6 +106,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 /* Card name below photo */
 .meal-card .card-body { padding:8px 10px 10px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .meal-card .card-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; flex:1; text-align:left; text-transform:uppercase; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card-last-planned { font-size:10px; color:#aeaeb2; margin-top:2px; font-weight:400; text-transform:none; letter-spacing:0; }
 
 /* Card add-to-plan button in footer row */
 .card-add-btn { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--border); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; }
@@ -389,7 +390,6 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Import from web
       </button>
-      <div class="step-nav" style="margin-top:12px"><button class="step-btn step-btn-next" id="s0next">Next →</button></div>
     </div>
     <div class="step-wrap" id="step-1">
       <div class="field" style="width:100%"><label>Meal Name</label><input type="text" id="input-name" placeholder="e.g. Chicken Tikka Masala"></div>
@@ -410,7 +410,10 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
           <button class="cat-btn" id="cat-cheat" type="button">Cheat Day</button>
         </div>
       </div>
-      <div class="field" style="width:100%"><label>My Notes</label><textarea id="input-notes" placeholder="Tips, variations…"></textarea></div>
+      <div class="field" style="width:100%">
+        <label style="display:flex;justify-content:space-between;"><span>My Notes</span><span id="notes-counter" style="font-weight:400;letter-spacing:0;">0/500</span></label>
+        <textarea id="input-notes" placeholder="Tips, variations…" maxlength="500"></textarea>
+      </div>
       <div class="step-nav"><button class="step-btn step-btn-back" id="s3back">← Back</button><button class="step-btn step-btn-save" id="s3save">Save Meal ✓</button></div>
     </div>
   </div>
@@ -440,7 +443,10 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
         <button class="cat-btn" id="edit-cat-cheat" type="button">Cheat Day</button>
       </div>
     </div>
-    <div class="field"><label>My Notes</label><textarea id="edit-notes"></textarea></div>
+    <div class="field">
+      <label style="display:flex;justify-content:space-between;"><span>My Notes</span><span id="edit-notes-counter" style="font-weight:400;letter-spacing:0;">0/500</span></label>
+      <textarea id="edit-notes" maxlength="500"></textarea>
+    </div>
   </div>
 </div>
 
@@ -463,6 +469,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
         <button class="io-btn" id="import-btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>
         <input type="file" id="import-input" accept=".json">
       </div>
+      <button id="clear-meals-btn" style="width:100%;margin-top:12px;padding:13px;border-radius:14px;border:none;cursor:pointer;background:#fdecea;color:#ff3b30;font-size:14px;font-weight:600;font-family:inherit;">Clear All Meals…</button>
     </div>
   </div>
 </div>
@@ -471,7 +478,7 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
 <div class="sheet-overlay" id="detail-overlay"></div>
 <div class="sheet" id="detail-sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-header"><span class="sheet-title" id="detail-name"></span><button class="sheet-btn" id="detail-close">Close</button></div>
+  <div class="sheet-header"><span class="sheet-title" id="detail-name"></span><div style="display:flex;gap:8px;"><button class="sheet-btn" id="detail-edit" style="background:#e8f4fd;color:#007aff;">Edit</button><button class="sheet-btn" id="detail-close">Close</button></div></div>
   <div class="sheet-body">
     <img id="detail-photo" src="" alt="" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;margin-bottom:18px;display:none;">
     <div id="detail-ingredients-wrap" style="margin-bottom:16px;display:none;">
@@ -542,11 +549,23 @@ body { background:var(--bg); height:100dvh; overflow:hidden; font-family:-apple-
                    classList pattern. Extracted openSheet(id) /
                    closeSheet(id) helpers; all 6 sheet pairs use them.
    ══════════════════════════════════════════════════════════ */
+/* ══ HAPTIC ══ */
+function haptic(ms=10){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
+
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
 function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 function getDayLabel(n){return n===1?'Tomorrow':new Date(Date.now()+n*864e5).toLocaleDateString('en-GB',{weekday:'long'});}
 function getDayDate(n){return new Date(Date.now()+n*864e5).toLocaleDateString('en-GB',{day:'numeric',month:'long'});}
+function lastPlannedLabel(ts){
+  if(!ts)return'';
+  const days=Math.floor((Date.now()-ts)/864e5);
+  if(days===0)return'Planned today';
+  if(days===1)return'Planned yesterday';
+  if(days<7)return`Planned ${days} days ago`;
+  if(days<14)return'Planned last week';
+  return`Planned ${Math.floor(days/7)} weeks ago`;
+}
 
 /* ══ FIX #9: Safe ID counter (no Date.now() collision) ══ */
 function makeId(){
@@ -583,15 +602,48 @@ let meals=JSON.parse(localStorage.getItem('wtc-meals')||'[]');
 /* ══ FIX #7: Plan depth is a single constant ══ */
 const PLAN_DAYS=5;
 const APP_VERSION='2.7';
-// Plan keys 1-7 = tomorrow through next 7 days
+// Plan keys 1-5 = tomorrow through +5 days
 const _defaultPlan=Object.fromEntries(Array.from({length:PLAN_DAYS},(_,i)=>[String(i+1),null]));
 let plan=JSON.parse(localStorage.getItem('wtc-plan')||JSON.stringify(_defaultPlan));
+
+// planDates stores the midnight timestamp of the real calendar day each slot was assigned to.
+// Key matches plan key (e.g. "1" = tomorrow's slot). Used for expiry detection.
+let planDates=JSON.parse(localStorage.getItem('wtc-plan-dates')||'{}');
+function savePlanDates(){safeSave('wtc-plan-dates',JSON.stringify(planDates));}
+
+// Helper: midnight of today
+function todayMidnight(){const d=new Date();d.setHours(0,0,0,0);return d.getTime();}
+
+// ── HOME #10: Expire any plan slots whose assigned date is in the past ──
+// Runs once on load. Returns meals to the home grid silently.
+(function expireOldPlanSlots(){
+  const today=todayMidnight();
+  let changed=false;
+  Object.keys(plan).forEach(k=>{
+    if(plan[k]&&planDates[k]&&planDates[k]<today){
+      plan[k]=null;
+      delete planDates[k];
+      changed=true;
+    }
+  });
+  if(changed){safeSave('wtc-plan',JSON.stringify(plan));savePlanDates();}
+})();
 
 // Normalise all IDs to strings on load
 meals.forEach(m=>{m.id=String(m.id);});
 Object.keys(plan).forEach(k=>{if(plan[k]!=null)plan[k]=String(plan[k]);});
 // Clean plan entries that don't match any meal
 Object.keys(plan).forEach(k=>{if(plan[k]&&!meals.find(m=>m.id===plan[k]))plan[k]=null;});
+
+// ── ADD/EDIT #9: Normalise meal names to UPPERCASE on load ──
+// Silently fixes any old meals saved before the uppercase rule was introduced.
+(function normaliseNames(){
+  let changed=false;
+  meals.forEach(m=>{
+    if(m.name&&m.name!==m.name.toUpperCase()){m.name=m.name.toUpperCase();changed=true;}
+  });
+  if(changed)safeSave('wtc-meals',JSON.stringify(meals));
+})();
 
 let customShopItems=JSON.parse(localStorage.getItem('wtc-custom-shop')||'[]');
 function saveCustomShop(){safeSave('wtc-custom-shop',JSON.stringify(customShopItems));}
@@ -605,7 +657,7 @@ let currentPhoto=null,editPhoto=null,editIdx=-1,searchQuery='',sy=0;
 let currentCategory='normal'; // 'normal' or 'cheat' — used during add flow
 
 function saveMeals(){safeSave('wtc-meals',JSON.stringify(meals));}
-function savePlan(){safeSave('wtc-plan',JSON.stringify(plan));}
+function savePlan(){safeSave('wtc-plan',JSON.stringify(plan));savePlanDates();}
 function saveRI(){safeSave('wtc-ri',JSON.stringify(removedIngredients));}
 function saveCI(){safeSave('wtc-ci',JSON.stringify(checkedIngredients));}
 
@@ -737,7 +789,7 @@ function renderCards(slideDir=null){
   empty.style.display=list.length===0?'flex':'none';
 
   // FIX #4: keyed diffing — only rebuild when list actually changes
-  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)+'|'+(m.category||'')).join(',')+homeTab;
+  const newKey=list.map(m=>m.id+'|'+m.name+'|'+String(!!m.photo)+'|'+isPlanned(m.id)+'|'+(m.category||'')+'|'+(m.lastPlanned||0)).join(',')+homeTab;
   if(newKey===_lastRenderedKey&&!slideDir){updateStats();return;}
   _lastRenderedKey=newKey;
 
@@ -764,7 +816,10 @@ function renderCards(slideDir=null){
         <button class="card-action-btn card-btn-delete" data-idx="${idx}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>
       </div>
       <div class="card-body">
-        <div class="card-name">${esc(meal.name)||'Untitled'}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="card-name">${esc(meal.name)||'Untitled'}</div>
+          ${meal.lastPlanned?`<div class="card-last-planned">${lastPlannedLabel(meal.lastPlanned)}</div>`:''}
+        </div>
         <button class="card-add-btn${planned?' planned':''}" data-id="${meal.id}">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
@@ -797,7 +852,7 @@ function renderCards(slideDir=null){
       e.stopPropagation();
       const i=parseInt(e.currentTarget.dataset.idx);
       Object.keys(plan).forEach(k=>{if(plan[k]===meals[i].id)plan[k]=null;});
-      savePlan();meals.splice(i,1);saveMeals();stopAllShaking();
+      savePlan();meals.splice(i,1);saveMeals();haptic(20);stopAllShaking();
       _lastRenderedKey=''; // force rebuild after delete
       renderCards();
     });
@@ -814,7 +869,9 @@ function stopAllShaking(){document.querySelectorAll('.meal-card.shaking').forEac
 function openSheet(id){document.getElementById(id).classList.add('open');document.getElementById(id.replace('-sheet','-overlay')).classList.add('open');}
 function closeSheet(id){document.getElementById(id).classList.remove('open');document.getElementById(id.replace('-sheet','-overlay')).classList.remove('open');}
 
+let _detailMeal=null;
 function openDetailSheet(meal){
+  _detailMeal=meal;
   document.getElementById('detail-name').textContent=meal.name||'Untitled';
   const photo=document.getElementById('detail-photo');
   if(meal.photo){photo.src=meal.photo;photo.style.display='block';}else{photo.style.display='none';}
@@ -837,6 +894,13 @@ function openDetailSheet(meal){
 }
 function closeDetailSheet(){closeSheet('detail-sheet');}
 document.getElementById('detail-close').addEventListener('click',closeDetailSheet);
+document.getElementById('detail-edit').addEventListener('click',()=>{
+  if(!_detailMeal)return;
+  const idx=meals.indexOf(_detailMeal);
+  if(idx===-1)return;
+  closeDetailSheet();
+  openEditSheet(idx);
+});
 document.getElementById('detail-overlay').addEventListener('click',closeDetailSheet);
 // Registered once — FIX #1 (card version, this one was already safe)
 document.addEventListener('click',e=>{if(document.querySelector('.meal-card.shaking')&&!e.target.closest('.meal-card.shaking')&&!e.target.closest('.card-action-btn'))stopAllShaking();});
@@ -889,6 +953,7 @@ function renderPlanner(){
       slot.querySelector('.slot-delete-btn').addEventListener('click',e=>{
         e.stopPropagation();
         plan[String(offset)]=null;
+        delete planDates[String(offset)];
         savePlan();stopAllSlots();renderPlanner();
         showToast('Meal removed from plan');
       });
@@ -1077,10 +1142,14 @@ function openDayPicker(mealId){
       </div>`;
     row.addEventListener('click',()=>{
       plan[String(offset)]=String(mealId);
-      savePlan();closeDayPicker();
-      _lastRenderedKey=''; // force card re-render (planned state changed)
+      // Record the actual calendar midnight this slot represents (offset days from today)
+      const slotDate=new Date();slotDate.setHours(0,0,0,0);slotDate.setDate(slotDate.getDate()+offset);
+      planDates[String(offset)]=slotDate.getTime();
+      const m=getMealById(mealId);if(m)m.lastPlanned=Date.now();
+      saveMeals();savePlan();closeDayPicker();
+      _lastRenderedKey='';
       renderCards();
-      showToast(`Planned for ${getDayLabel(offset)} ✓`);
+      haptic();showToast(`Planned for ${getDayLabel(offset)} ✓`);
     });
     opts.appendChild(row);
   });
@@ -1120,7 +1189,10 @@ function renderPlannerPickList(query){
       <div class="plannerpick-name">${esc(meal.name||'Untitled')}</div>`;
     row.addEventListener('click',()=>{
       plan[String(plannerPickOffset)]=meal.id;
-      savePlan();closePlannerMealPicker();renderPlanner();
+      const slotDate=new Date();slotDate.setHours(0,0,0,0);slotDate.setDate(slotDate.getDate()+plannerPickOffset);
+      planDates[String(plannerPickOffset)]=slotDate.getTime();
+      meal.lastPlanned=Date.now();
+      saveMeals();savePlan();closePlannerMealPicker();renderPlanner();
       showToast(`Added to ${getDayLabel(plannerPickOffset)} ✓`);
     });
     list.appendChild(row);
@@ -1196,6 +1268,7 @@ function openAddSheet(){
   document.getElementById('input-name').value='';
   document.getElementById('input-ingredients').value='';
   document.getElementById('input-notes').value='';
+  document.getElementById('notes-counter').textContent='0/500';
   document.getElementById('ingredient-chips').innerHTML=''; // clear chips
   // Reset category buttons
   document.getElementById('cat-normal').className='cat-btn active-normal';
@@ -1207,12 +1280,21 @@ function openAddSheet(){
   document.getElementById('step-skip').style.display='block';
   openSheet('add-sheet');
 }
+function hasAddInput(){
+  return !!(document.getElementById('input-name').value.trim()||
+            document.getElementById('input-ingredients').value.trim()||
+            document.getElementById('input-notes').value.trim()||
+            currentPhoto);
+}
+function confirmCloseAdd(){
+  if(hasAddInput()&&!confirm('Discard this meal? Your changes will be lost.'))return;
+  closeAddSheet();
+}
 function closeAddSheet(){closeSheet('add-sheet');}
-document.getElementById('add-overlay').addEventListener('click',closeAddSheet);
+document.getElementById('add-overlay').addEventListener('click',confirmCloseAdd);
 document.getElementById('step-skip').addEventListener('click',()=>{if(step<3)goStep(step+1);else doSaveMeal();});
 document.getElementById('add-sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
-document.getElementById('add-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)closeAddSheet();},{passive:true});
-document.getElementById('s0next').addEventListener('click',()=>goStep(1));
+document.getElementById('add-sheet').addEventListener('touchmove',e=>{if(e.touches[0].clientY-sy>80)confirmCloseAdd();},{passive:true});
 document.getElementById('s1back').addEventListener('click',()=>goStep(0,true));
 document.getElementById('s1next').addEventListener('click',()=>{if(!document.getElementById('input-name').value.trim()){document.getElementById('input-name').focus();showToast('Please enter a meal name');return;}goStep(2);});
 document.getElementById('s2back').addEventListener('click',()=>goStep(1,true));
@@ -1248,7 +1330,7 @@ function doSaveMeal(){
   const rawIng=document.getElementById('input-ingredients').value.trim();
   const ingredients=rawIng.split(',').map(s=>s.trim()).filter(Boolean).map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(', ');
   meals.unshift({id:makeId(),name,ingredients,notes:document.getElementById('input-notes').value.trim(),photo:currentPhoto,category:currentCategory});
-  saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();showToast('Meal saved ✓');
+  saveMeals();closeAddSheet();_lastRenderedKey='';renderCards();haptic();showToast('Meal saved ✓');
 }
 
 /* ══ INGREDIENT CHIPS — single shared factory (eliminates duplication) ══ */
@@ -1272,11 +1354,22 @@ function buildIngredientChips(ingredientsStr, containerId, textareaId){
   });
   syncToTextarea();
 }
-// Watch both textareas — if user types manually, clear chips
+// Notes character counters
+document.getElementById('input-notes').addEventListener('input',function(){
+  document.getElementById('notes-counter').textContent=this.value.length+'/500';
+});
+document.getElementById('edit-notes').addEventListener('input',function(){
+  document.getElementById('edit-notes-counter').textContent=this.value.length+'/500';
+});
 ['input-ingredients','edit-ingredients'].forEach(id=>{
   document.getElementById(id).addEventListener('input',function(){
     const chipId=id==='input-ingredients'?'ingredient-chips':'edit-ingredient-chips';
-    const c=document.getElementById(chipId);if(c.children.length>0)c.innerHTML='';
+    const c=document.getElementById(chipId);
+    if(c.children.length===0)return;
+    const chipText=Array.from(c.querySelectorAll('.ing-chip')).map(ch=>ch.dataset.value.toLowerCase()).join(', ');
+    const typed=this.value.toLowerCase().trim();
+    // Only clear chips if the typed text is clearly different from chip values
+    if(!chipText.startsWith(typed)&&!typed.startsWith(chipText.slice(0,typed.length)))c.innerHTML='';
   });
 });
 function openUrlSheet(){
@@ -1348,6 +1441,7 @@ function openEditSheet(idx){
   document.getElementById('edit-name').value=meal.name||'';
   document.getElementById('edit-ingredients').value=meal.ingredients||'';
   document.getElementById('edit-notes').value=meal.notes||'';
+  document.getElementById('edit-notes-counter').textContent=(meal.notes||'').length+'/500';
   buildIngredientChips(meal.ingredients||'','edit-ingredient-chips','edit-ingredients');
   // Set category buttons
   const isCheatMeal=meal.category==='cheat';
@@ -1368,13 +1462,13 @@ document.getElementById('edit-save').addEventListener('click',()=>{
   const name=raw.toUpperCase();
   const editIsCheat=document.getElementById('edit-cat-cheat').classList.contains('active');
   meals[editIdx].name=name;meals[editIdx].ingredients=document.getElementById('edit-ingredients').value.trim();meals[editIdx].notes=document.getElementById('edit-notes').value.trim();meals[editIdx].photo=editPhoto;meals[editIdx].category=editIsCheat?'cheat':'normal';
-  saveMeals();closeEditSheet();_lastRenderedKey='';renderCards();showToast('Meal updated ✓');
+  saveMeals();closeEditSheet();_lastRenderedKey='';renderCards();haptic();showToast('Meal updated ✓');
 });
 
 /* ══ SETTINGS ══ */
 function updateStats(){
   document.getElementById('stat-total').textContent=meals.length;
-  document.getElementById('stat-planned').textContent=getPlannedIds().length;
+  document.getElementById('stat-planned').textContent=getPlannedIds().length+' / '+PLAN_DAYS;
   document.getElementById('stat-version').textContent=APP_VERSION;
 }
 function openSettings(){updateStats();openSheet('settings-sheet');}
@@ -1394,9 +1488,21 @@ function applySkin(skin){
 }
 document.querySelectorAll('.skin-swatch').forEach(s=>s.addEventListener('click',()=>applySkin(s.dataset.skin)));
 
+document.getElementById('clear-meals-btn').addEventListener('click',()=>{
+  if(!confirm(`Delete all ${meals.length} meals? This cannot be undone.`))return;
+  meals=[];
+  Object.keys(plan).forEach(k=>{plan[k]=null;});
+  saveMeals();savePlan();
+  _lastRenderedKey='';renderCards();
+  closeSettings();
+  showToast('All meals deleted');
+});
 document.getElementById('export-btn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({version:3,meals,plan},null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`wtc-meals-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);showToast('Exported ✓');
+  const now=new Date();
+  const date=now.toISOString().slice(0,10);
+  const time=now.toTimeString().slice(0,5).replace(':','-');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`wtc-meals-${date}-${time}.json`;a.click();URL.revokeObjectURL(url);showToast('Exported ✓');
 });
 document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-input').click());
 document.getElementById('import-input').addEventListener('change',e=>{
